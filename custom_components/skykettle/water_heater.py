@@ -15,7 +15,7 @@ from .const import *
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
     """Set up the SkyKettle entry."""
     async_add_entities([SkyWaterHeater(hass, entry)])
 
@@ -46,7 +46,7 @@ class SkyWaterHeater(WaterHeaterEntity):
 
     @property
     def device_class(self):
-        return REDMOND_DEVICE_CLASS
+        return DOMAIN
 
     @property
     def icon(self):
@@ -54,17 +54,19 @@ class SkyWaterHeater(WaterHeaterEntity):
 
     @property
     def device_info(self):
+        model = self.entry.data.get(ATTR_MODEL, None)
         sw_version = self.entry.data.get(ATTR_SW_VERSION, None)
         return DeviceInfo(
-            manufacturer="Redmond",
-            suggested_area="Kitchen",
+            manufacturer=MANUFACTORER,
+            model=model,
             sw_version=sw_version,
             identifiers={
                 (DOMAIN, self.entry.data[CONF_MAC])
             },
             connections={                
                 ("mac", self.entry.data[CONF_MAC])
-            }
+            },
+            suggested_area=SUGGESTED_AREA
         )
 
     @property

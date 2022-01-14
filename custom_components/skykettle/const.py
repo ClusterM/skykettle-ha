@@ -2,7 +2,8 @@
 
 DOMAIN = "skykettle"
 FRIENDLY_NAME = "SkyKettle"
-REDMOND_DEVICE_CLASS = "skykettle"
+MANUFACTORER = "Redmond"
+SUGGESTED_AREA = "Kitchen"
 
 REGEX_MAC = r"^(([0-9a-fA-F]){2}[:-]?){5}[0-9a-fA-F]{2}$"
 

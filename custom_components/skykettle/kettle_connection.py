@@ -45,7 +45,6 @@ class KettleConnection(SkyKettle):
         self._light_switch_boil = None
         self._light_switch_sync = None
         self._fresh_water = None
-
         self._disposed = False
 
     async def command(self, command, params=[]):        
@@ -237,14 +236,14 @@ class KettleConnection(SkyKettle):
                 msg = "Timeout" # too many debug info
             else:
                 msg = f"{type(ex).__name__}: {str(ex)}"
-            if tries > 1: 
-                _LOGGER.info(f"{msg}, retry #{KettleConnection.MAX_TRIES - tries + 1}")
+            if tries > 1:
+                _LOGGER.debug(f"{msg}, retry #{KettleConnection.MAX_TRIES - tries + 1}")
                 await asyncio.sleep(KettleConnection.TRIES_INTERVAL)
                 await self.update(tries=tries-1)
             elif type(ex) != pexpect.exceptions.TIMEOUT:
                 _LOGGER.error(f"{traceback.format_exc()}")
             else:
-                _LOGGER.info(f"Timeout")
+                _LOGGER.debug(f"Timeout")
                 #_LOGGER.warning(f"{type(ex).__name__}: {str(ex)}")
         
         if len(self._successes) > 100: self._successes = self._successes[-100:]

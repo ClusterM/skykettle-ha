@@ -12,10 +12,14 @@ from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = [
+    Platform.WATER_HEATER,
+    Platform.SWITCH
+]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Sky Kettle integration from a config entry."""
-    _LOGGER.info(f"async_setup_entry")
     _LOGGER.info(f"setup:entry.data={entry.data or 'none'}")
 
     entry.async_on_unload(entry.add_update_listener(entry_update_listener))
@@ -41,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(
         hass, timedelta(seconds=1), poll)
 
-    for component in [Platform.WATER_HEATER]:
+    for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
     )
@@ -50,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    _LOGGER.info(f"async_unload_entry")
     hass.data[DOMAIN][DATA_WORKING] = False
     for component in PLATFORMS:
         hass.async_create_task(
@@ -64,6 +67,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def entry_update_listener(hass, entry):
     """Handle options update."""
-    _LOGGER.info(f"entry_update_listener")
     kettle = hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION]
     kettle.persistent = entry.data.get(CONF_PERSISTENT_CONNECTION)
