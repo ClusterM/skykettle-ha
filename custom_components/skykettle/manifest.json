@@ -1,0 +1,12 @@
+{
+  "domain": "skykettle",
+  "name": "SkyKettle",
+  "version": "1.0",
+  "dependencies": [],
+  "requirements": ["pexpect==4.8.0"],
+  "codeowners": ["@clusterm"],
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "documentation": "",
+  "issue_tracker": ""
+}

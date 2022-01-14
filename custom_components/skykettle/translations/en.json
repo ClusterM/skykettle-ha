@@ -1,0 +1,38 @@
+{
+    "title": "SkyKettle",
+    "config": {
+        "abort": {
+            "already_configured": "Integration for this device is already configured"
+        },
+        "error": {
+            "invalid_mac": "MAC address must be in the form 'AA:BB:CC:DD:EE:FF'."
+        },
+        "step": {
+            "user": {
+                "title": "SkyKettle MAC Address",
+                "description": "Select MAC address of your kettle.",
+                "data": {
+                    "mac": "MAC address of the kettle"
+                }
+            },
+            "init": {
+                "title": "SkyKettle Options",
+                "data": {
+                    "scan_interval": "Kettle polling interfal",
+                    "persistent_connection": "Persistent connection"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "SkyKettle Options",
+                "data": {
+                    "scan_interval": "Kettle status query interfal",
+                    "persistent_connection": "Persistent connection"
+                }
+            }
+        }
+    }
+}
