@@ -89,7 +89,7 @@ class SkySwitch(SwitchEntity):
     
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        await self.kettle.set_target_mode(SkyKettle.MODE_BOIL)
+        await self.kettle.set_target_mode(SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL])
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""

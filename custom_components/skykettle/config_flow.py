@@ -2,10 +2,9 @@
 import logging
 import re
 import voluptuous as vol
-import subprocess as sp
 from homeassistant.const import *
 import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries
 from homeassistant.core import callback
 from .const import *
 import secrets
@@ -33,7 +32,7 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a new SkyKettleConfigFlow."""
         self.entry = entry
         self.config = {} if not entry else dict(entry.data.items())
-        _LOGGER.info(f"config={self.config}")
+        _LOGGER.debug(f"initial config: {self.config}")
 
     def get_options_schema(self):
         return vol.Schema(
@@ -75,8 +74,9 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.config[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]            
             self.config[CONF_PERSISTENT_CONNECTION] = user_input[CONF_PERSISTENT_CONNECTION]            
             fname = f"{FRIENDLY_NAME} ({self.config[CONF_MAC]})"
+            _LOGGER.debug(f"saving config: {self.config}")
             if self.entry:
-                self.hass.config_entries.async_update_entry(self.entry, data={**self.entry, **self.config})
+                self.hass.config_entries.async_update_entry(self.entry, data=self.config)
             return self.async_create_entry(
                 title=fname, data=self.config if not self.entry else {}
             )

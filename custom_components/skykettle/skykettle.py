@@ -107,7 +107,7 @@ class SkyKettle():
             elif target_temp > SkyKettle.MAX_TEMP: raise ValueError(f"temperature too high: {target_temp}")
         elif mode == SkyKettle.MODE_BOIL:
             target_temp = 0
-        elif mode in [SkyKettle.LIGHT_LAMP, SkyKettle.MODE_GAME]:
+        else:
             target_temp = 85
             
         data = pack("BxBxxxxxxxxxxBxx", int(mode), int(target_temp), int(0x80 + boil_time))

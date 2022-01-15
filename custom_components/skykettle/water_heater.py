@@ -99,17 +99,17 @@ class SkyWaterHeater(WaterHeaterEntity):
     
     @property
     def max_temp(self):
-        return SkyKettle.MAX_TEMP
+        return BOIL_TEMP
 
     @property
     def operation_list(self):
-        #return [STATE_OFF] + list(SkyKettle.MODE_NAMES.values())
-        return [
-            STATE_OFF,
-            SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL],
-            SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL_HEAT],
-            SkyKettle.MODE_NAMES[SkyKettle.MODE_HEAT]
-        ]            
+        return [STATE_OFF] + list(SkyKettle.MODE_NAMES.values())
+        # return [
+        #     STATE_OFF,
+        #     SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL],
+        #     SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL_HEAT],
+        #     SkyKettle.MODE_NAMES[SkyKettle.MODE_HEAT]
+        # ]            
 
     @property
     def is_on(self):
@@ -151,7 +151,7 @@ class SkyWaterHeater(WaterHeaterEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        await self.kettle.set_target_mode(SkyKettle.MODE_BOIL)
+        await self.kettle.set_target_mode(SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL])
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""

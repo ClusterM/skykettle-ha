@@ -4,7 +4,6 @@ from .const import *
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import *
-import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.event as ev
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .kettle_connection import KettleConnection
@@ -20,8 +19,6 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Sky Kettle integration from a config entry."""
-    _LOGGER.info(f"setup:entry.data={entry.data or 'none'}")
-
     entry.async_on_unload(entry.add_update_listener(entry_update_listener))
 
     if DOMAIN not in hass.data: hass.data[DOMAIN] = {}

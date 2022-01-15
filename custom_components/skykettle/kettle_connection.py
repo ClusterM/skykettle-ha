@@ -174,6 +174,7 @@ class KettleConnection(SkyKettle):
             if self._target_state != None:
                 _LOGGER.debug(f"Target state: {self._target_state}")
                 target_mode, target_temp = self._target_state
+                target_temp = self.limit_temp(target_temp)
                 if target_mode in [SkyKettle.MODE_BOIL_HEAT, SkyKettle.MODE_HEAT] and target_temp < SkyKettle.MIN_TEMP:
                     target_mode = None
                 if target_mode == None and self._status.is_on:
@@ -248,6 +249,20 @@ class KettleConnection(SkyKettle):
         
         if len(self._successes) > 100: self._successes = self._successes[-100:]
 
+    @staticmethod
+    def limit_temp(temp):
+        if temp != None and temp > SkyKettle.MAX_TEMP:
+            return SkyKettle.MAX_TEMP
+        elif temp != None and temp < SkyKettle.MIN_TEMP:
+            return SkyKettle.MIN_TEMP
+        else:
+            return temp
+
+    @staticmethod
+    def get_mode_name(mode_id):
+        if mode_id == None: return "off"
+        return SkyKettle.MODE_NAMES[mode_id]
+
     @property
     def success_rate(self):
         if len(self._successes) == 0: return 0
@@ -302,14 +317,18 @@ class KettleConnection(SkyKettle):
             target_mode, target_temp = self._target_state
             if target_mode in [SkyKettle.MODE_BOIL_HEAT, SkyKettle.MODE_HEAT]:
                 return target_temp
+            if target_mode == SkyKettle.MODE_BOIL:
+                return BOIL_TEMP
             if target_mode == None:
                 return ROOM_TEMP
-        else:
-            if self._status:
-                if not self._status.is_on: 
-                    return ROOM_TEMP
+        if self._status:
+            if self._status.is_on:
                 if self._status.mode in [SkyKettle.MODE_BOIL_HEAT, SkyKettle.MODE_HEAT]:
                     return self._status.target_temp
+                if self._status.mode == SkyKettle.MODE_BOIL:
+                    return BOIL_TEMP
+            else: # Off
+                return ROOM_TEMP
         return None
 
     @property
@@ -323,32 +342,34 @@ class KettleConnection(SkyKettle):
         return None
 
     async def set_target_temp(self, target_temp):
+        """Set new temperature."""
         _LOGGER.info(f"Setting target temperature to {target_temp}")
         target_mode = self.current_mode
-        if target_mode == None and target_temp >= BOIL_TEMP:
-            # If set to 100 - just boiling
-            target_mode = SkyKettle.MODE_BOIL
-        elif target_mode == None and target_temp >= SkyKettle.MIN_TEMP:
+        if target_temp < SkyKettle.MIN_TEMP:
+            # Just turn off
+            target_mode = None             
+        elif target_temp > SkyKettle.MAX_TEMP:
+            # If set to ~100 - just boiling
+            target_mode = SkyKettle.MODE_BOIL # or BOIL_HEAT?
+        elif target_mode == None:
             # Kittle is off now, need to turn on some mode
             target_mode = SkyKettle.MODE_HEAT # or BOIL_HEAT?
-        elif target_mode == SkyKettle.MODE_BOIL_HEAT and target_temp < SkyKettle.MIN_TEMP:
-            # Disable heating after boiling
-            target_mode = SkyKettle.MODE_BOIL
+        elif target_mode == SkyKettle.MODE_BOIL:
+            # Replace boiling with...            
+            target_mode = SkyKettle.MODE_HEAT # or BOIL_HEAT?
         if target_mode != self.current_mode:
-            _LOGGER.info(f"Mode autoswitched to {target_mode}")
+            _LOGGER.info(f"Mode autoswitched to {target_mode} ({self.get_mode_name(target_mode)})")
         await self._set_target_state(target_mode, target_temp)
 
     async def set_target_mode(self, operation_mode):
         """Set new operation mode."""
         _LOGGER.info(f"Setting target mode to {operation_mode}")
-        target_temp = self.target_temp
         target_mode = None
         # Get target mode ID
         vs = [k for k, v in SkyKettle.MODE_NAMES.items() if v == operation_mode]
         if len(vs) > 0: target_mode = vs[0]
-        # Need to set at least MIN_TEMP when heating enabled
-        if target_mode in [SkyKettle.MODE_HEAT, SkyKettle.MODE_BOIL_HEAT] and target_temp < SkyKettle.MIN_TEMP:
-            target_temp = SkyKettle.MIN_TEMP
+        # Set heating temperature if not set
+        target_temp = self.limit_temp(self.target_temp)
         if target_temp != self.target_temp:
             _LOGGER.info(f"Target temperature autoswitched to {target_temp}")
         await self._set_target_state(target_mode, target_temp)
