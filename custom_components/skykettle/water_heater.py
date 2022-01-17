@@ -39,9 +39,13 @@ class SkyWaterHeater(WaterHeaterEntity):
         return self.hass.data[DOMAIN][self.entry.entry_id][DATA_CONNECTION]
 
     @property
+    def unique_id(self):
+        return self.entry.entry_id + "_water_heater"
+
+    @property
     def name(self):
         """Name of the entity."""
-        return self.entry.data.get(CONF_FRIENDLY_NAME, FRIENDLY_NAME)
+        return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip()
 
     @property
     def icon(self):
@@ -66,10 +70,6 @@ class SkyWaterHeater(WaterHeaterEntity):
     @property
     def available(self):
         return self.kettle.available
-
-    @property
-    def unique_id(self):
-        return self.entry.entry_id + "_water_heater"
 
     @property
     def entity_category(self):
@@ -99,7 +99,7 @@ class SkyWaterHeater(WaterHeaterEntity):
         #     SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL],
         #     SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL_HEAT],
         #     SkyKettle.MODE_NAMES[SkyKettle.MODE_HEAT]
-        # ]            
+        # ]
 
     @property
     def extra_state_attributes(self):
@@ -121,8 +121,8 @@ class SkyWaterHeater(WaterHeaterEntity):
             "poll_interval": self.entry.data.get(CONF_SCAN_INTERVAL, 0),
             "ontime_seconds": self.kettle.ontime.total_seconds(),
             "ontime_string": str(self.kettle.ontime),
-            "energy_wh": self.kettle.energy_wh, 
-            "heater_on_count": self.kettle.heater_on_count, 
+            "energy_wh": self.kettle.energy_wh,
+            "heater_on_count": self.kettle.heater_on_count,
             "user_on_count": self.kettle.user_on_count,
             "sound_enabled": self.kettle.sound_enabled,
             "color_interval": self.kettle.color_interval,
@@ -150,18 +150,18 @@ class SkyWaterHeater(WaterHeaterEntity):
     @property
     def current_temperature(self):
         return self.kettle.current_temp
-    
+
     @property
     def target_temperature(self):
         return self.kettle.target_temp
 
-    @property 
+    @property
     def current_operation(self):
         return self.kettle.target_mode_str
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        target_temperature = kwargs.get(ATTR_TEMPERATURE)        
+        target_temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.kettle.set_target_temp(target_temperature)
         async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
 

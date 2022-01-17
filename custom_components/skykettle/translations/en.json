@@ -5,11 +5,13 @@
             "already_configured": "Integration for this device is already configured.",
             "hcitool_not_found": "hcitool binary not found.",
             "hatttool_not_found": "hatttool binary not found.",
-            "permission_error": "Permission error, make sure that hcitool and hatttool are granted with privileges (see manual).",
+            "permission_error": "Permission error, make sure that hcitool and hatttool are granted with privileges (check instructions).",
             "unknown": "Unknown error, please check logs."
         },
         "error": {
-            "invalid_mac": "MAC address must be in the form 'AA:BB:CC:DD:EE:FF'."
+            "invalid_mac": "MAC address must be in the form 'AA:BB:CC:DD:EE:FF'.",
+            "cant_connect": "Can't connect to the kettle. Please make sure that it's on the stand, hatttool is granted with privileges (check instrucrions) and official application is not connected to the kettle.",
+            "cant_auth": "Connected to the kettle but pairing failed. Please try again."
         },
         "step": {
             "user": {
@@ -30,6 +32,10 @@
                     "mac": "MAC address of the kettle."
                 }
             },
+            "connect": {
+                "title": "First connect",
+                "description": "Please put your kettle into pairing mode (check the user manual, usually need to hold some button for 10 seconds) before next step."
+            },            
             "init": {
                 "title": "SkyKettle Options",
                 "description": "Finally, you can tune some options if your want.",

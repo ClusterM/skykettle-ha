@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 def device_info(entry):
     return DeviceInfo(
-        name=entry.data.get(CONF_FRIENDLY_NAME, FRIENDLY_NAME),
+        name=(FRIENDLY_NAME + " " + entry.data.get(CONF_FRIENDLY_NAME, "")).strip(),
         manufacturer=MANUFACTORER,
         model=entry.data.get(CONF_FRIENDLY_NAME, None),
         sw_version=entry.data.get(ATTR_SW_VERSION, None),

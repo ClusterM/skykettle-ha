@@ -21,7 +21,7 @@ class SkyKettle():
         MODE_LAMP: "Lamp",
         MODE_GAME: "Light"
     }
-    
+
     LIGHT_BOIL = 0x00
     LIGHT_LAMP = 0x01
     LIGHT_SYNC = 0xC8
@@ -56,7 +56,7 @@ class SkyKettle():
     COMMAND_GET_STATS1 = 0x47
     COMMAND_GET_STATS2 = 0x50
     COMMAND_SET_FRESH_WATER = 0x51 # [00 00/01 30 00 00 00 00 00 00 00 00 00 00 00 00 00] -> [00 00]
-    COMMAND_GET_FRESH_WATER = 0x52 # 00 -> [00 00/01 3000000000000000000000000000]    
+    COMMAND_GET_FRESH_WATER = 0x52 # 00 -> [00 00/01 3000000000000000000000000000]
     COMMAND_SYNC_TIME = 0x6E # [7548D761(unix_timestamp) 302A0000(offset_minutes)] -> 00
     COMMAND_GET_TIME = 0x6F
     COMMAND_GET_SCHEDULE_RECORD = 0x70 # [xx] -> [24 57 D7 61 01 01 00 00 00 0F 01 00 00 00 00 00]
@@ -80,7 +80,7 @@ class SkyKettle():
 
     async def auth(self, key):
         r = await self.command(SkyKettle.COMMAND_AUTH, key)
-        ok = r[0] == 1        
+        ok = r[0] == 1
         _LOGGER.debug(f"Auth: ok={ok}")
         return ok
 
@@ -92,12 +92,12 @@ class SkyKettle():
         return (major, minor)
 
     async def turn_on(self):
-        r = await self.command(SkyKettle.COMMAND_TURN_ON) 
+        r = await self.command(SkyKettle.COMMAND_TURN_ON)
         if r[0] != 1: raise SkyKettleError("can't turn on")
         _LOGGER.debug(f"Turned on")
 
     async def turn_off(self):
-        r = await self.command(SkyKettle.COMMAND_TURN_OFF) 
+        r = await self.command(SkyKettle.COMMAND_TURN_OFF)
         if r[0] != 1: raise SkyKettleError("can't turn off")
         _LOGGER.debug(f"Turned off")
 
@@ -113,7 +113,7 @@ class SkyKettle():
         status = status._replace(
             is_on = status.is_on == 2,
             boil_time = status.boil_time - 0x80
-        )        
+        )
         _LOGGER.debug(f"Status: mode={status.mode} ({SkyKettle.MODE_NAMES[status.mode]}), is_on={status.is_on}, "+
                      f"target_temp={status.target_temp}, current_temp={status.current_temp}, sound_enabled={status.sound_enabled}, "+
                      f"color_interval={status.color_interval}, boil_time={status.boil_time}")
@@ -124,10 +124,10 @@ class SkyKettle():
         offset = calendar.timegm(t) - calendar.timegm(time.gmtime(time.mktime(t)))
         now = int(time.time())
         data = pack("<ii", now, offset)
-        r = await self.command(SkyKettle.COMMAND_SYNC_TIME, data)        
+        r = await self.command(SkyKettle.COMMAND_SYNC_TIME, data)
         # r = await self.command(SkyKettle.COMMAND_SYNC_TIME,
         #    list(now.to_bytes(4, byteorder='little')) +
-        #     list(offset.to_bytes(4, byteorder='little', signed=True)))        
+        #     list(offset.to_bytes(4, byteorder='little', signed=True)))
         if r[0] != 0: raise SkyKettleError("can't sync time")
         _LOGGER.debug(f"Writed time={now} ({datetime.fromtimestamp(now).strftime('%Y-%m-%d %H:%M:%S')}), offset={offset} (GMT{offset/60/60:+.2f})")
 
@@ -144,7 +144,7 @@ class SkyKettle():
         _LOGGER.debug(f"Updated lamp auto off hours={hours}")
 
     async def get_lamp_auto_off_hours(self):
-        r = await self.command(SkyKettle.COMMAND_GET_AUTO_OFF_HOURS)        
+        r = await self.command(SkyKettle.COMMAND_GET_AUTO_OFF_HOURS)
         hours, = unpack("<H", r)
         _LOGGER.debug(f"Lamp auto off hours={hours}")
         return hours
@@ -160,7 +160,7 @@ class SkyKettle():
         r = await self.command(SkyKettle.COMMAND_SET_COLORS, data)
         if r[0] != 0: raise SkyKettleError("can't set colors")
         _LOGGER.debug(f"Updated colors set: {colors_set}")
-        
+
     async def commit(self):
         r = await self.command(SkyKettle.COMMAND_COMMIT_SETTINGS)
         if r[0] != 1: raise SkyKettleError("can't commit settings")
@@ -168,7 +168,7 @@ class SkyKettle():
 
     async def set_lamp_color_interval(self, secs):
         data = pack("<H", secs)
-        r = await self.command(SkyKettle.COMMAND_SET_COLOR_INTERVAL, data) 
+        r = await self.command(SkyKettle.COMMAND_SET_COLOR_INTERVAL, data)
         if r[0] != 0: raise SkyKettleError("can't set lamp color change interval")
         _LOGGER.debug(f"Updated lamp color interval secs={secs}")
 

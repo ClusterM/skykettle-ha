@@ -47,9 +47,13 @@ class KettleLight(LightEntity):
         return self.hass.data[DOMAIN][self.entry.entry_id][DATA_CONNECTION]
 
     @property
+    def unique_id(self):
+        return f"{self.entry.entry_id}_light"
+
+    @property
     def name(self):
         """Name of the entity."""
-        return self.entry.data.get(CONF_FRIENDLY_NAME, FRIENDLY_NAME)
+        return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " impulse light"
 
     @property
     def device_info(self):
@@ -70,10 +74,6 @@ class KettleLight(LightEntity):
     @property
     def available(self):
         return self.kettle.available
-    
-    @property
-    def unique_id(self):
-        return self.entry.entry_id + "_light"
 
     @property
     def brightness(self):

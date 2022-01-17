@@ -20,7 +20,7 @@ class ScanThread(Thread):
         self.result = proc.communicate()
 
 
-async def ble_scan(scan_time=3):    
+async def ble_scan(scan_time=3):
     scan_thread = ScanThread(scan_time=scan_time, daemon=True)
     scan_thread.start()
     while not scan_thread.result: await asyncio.sleep(0.1)
@@ -43,4 +43,3 @@ async def ble_scan(scan_time=3):
                 res.append(BleDevice(mac, name))
 
     return res
-    

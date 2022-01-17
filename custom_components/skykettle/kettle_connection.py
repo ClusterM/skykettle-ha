@@ -48,7 +48,7 @@ class KettleConnection(SkyKettle):
         self._fresh_water = None
         self._disposed = False
 
-    async def command(self, command, params=[]):        
+    async def command(self, command, params=[]):
         async with self._command_lock:
             if self._disposed:
                 raise DisposedError()
@@ -61,7 +61,7 @@ class KettleConnection(SkyKettle):
             self._child.sendline(data)
             while True:
                 r = await self._child.expect([
-                        r"value:([ 0-9a-f]*)\r\n.*?\[LE\]> ", 
+                        r"value:([ 0-9a-f]*)\r\n.*?\[LE\]> ",
                         r"Disconnected\r\n.*?\[LE\]> ",
                         #r"Invalid file descriptor.\r\n"
                     ], async_=True)
@@ -71,7 +71,7 @@ class KettleConnection(SkyKettle):
                 # elif r == 2:
                 #     _LOGGER.error("'Invalid file descriptor' message received")
                 #     _LOGGER.debug(self._child)
-                #     #raise IOError("Invalid file descriptor")                
+                #     #raise IOError("Invalid file descriptor")
                 #     continue
                 hex_response = self._child.match.group(1).decode().strip()
                 #_LOGGER.debug(f"Received (raw): {hex_response}")
@@ -162,10 +162,10 @@ class KettleConnection(SkyKettle):
     async def _disconnect_if_need(self):
         if not self.persistent:
             await self.disconnect()
-    
+
     async def update(self, tries=MAX_TRIES):
         try:
-            async with self._update_lock: 
+            async with self._update_lock:
                 if self._disposed: return
                 _LOGGER.debug(f"Updating")
                 await self._connect_if_need()
@@ -193,7 +193,7 @@ class KettleConnection(SkyKettle):
                         self._status = await self.get_status()
                     elif target_mode != None  and (
                             target_mode != self._status.mode or
-                            (target_mode in [SkyKettle.MODE_HEAT, SkyKettle.MODE_BOIL_HEAT] and 
+                            (target_mode in [SkyKettle.MODE_HEAT, SkyKettle.MODE_BOIL_HEAT] and
                             target_temp != self._status.target_temp)):
                         _LOGGER.info("Need to switch mode of the kettle and restart it")
                         await self.turn_off()
@@ -217,7 +217,7 @@ class KettleConnection(SkyKettle):
                         pass
                     try:
                         self._light_switch_boil = await self.get_light_switch(SkyKettle.LIGHT_BOIL)
-                        self._light_switch_sync = await self.get_light_switch(SkyKettle.LIGHT_SYNC)                    
+                        self._light_switch_sync = await self.get_light_switch(SkyKettle.LIGHT_SYNC)
                     except Exception as ex:
                         _LOGGER.debug(f"Can't get light switches ({type(ex).__name__}): {str(ex)}")
                     try:
@@ -253,7 +253,7 @@ class KettleConnection(SkyKettle):
             else:
                 _LOGGER.debug(f"Timeout")
                 #_LOGGER.warning(f"{type(ex).__name__}: {str(ex)}")
-        
+
         if len(self._successes) > 100: self._successes = self._successes[-100:]
 
     @staticmethod
@@ -301,7 +301,7 @@ class KettleConnection(SkyKettle):
 
     def __del__(self):
         self.stop()
-    
+
     @property
     def available(self):
         return self._last_connect_ok and self._last_auth_ok
@@ -310,13 +310,13 @@ class KettleConnection(SkyKettle):
     def current_temp(self):
         if self._status:
             return self._status.current_temp
-        return None       
+        return None
 
     @property
     def current_mode(self):
         if self._status and self._status.is_on:
             return self._status.mode
-        return None    
+        return None
 
     @property
     def target_temp(self):
@@ -360,7 +360,7 @@ class KettleConnection(SkyKettle):
         # Some checks for mode
         if target_temp < SkyKettle.MIN_TEMP:
             # Just turn off
-            target_mode = None             
+            target_mode = None
         elif target_temp > SkyKettle.MAX_TEMP:
             # If set to ~100 - just boiling
             target_mode = SkyKettle.MODE_BOIL # or BOIL_HEAT?
@@ -368,7 +368,7 @@ class KettleConnection(SkyKettle):
             # Kittle is off now, need to turn on some mode
             target_mode = SkyKettle.MODE_HEAT # or BOIL_HEAT?
         elif target_mode == SkyKettle.MODE_BOIL:
-            # Replace boiling with...            
+            # Replace boiling with...
             target_mode = SkyKettle.MODE_HEAT # or BOIL_HEAT?
         if target_mode != self.current_mode:
             _LOGGER.info(f"Mode autoswitched to {target_mode} ({self.get_mode_name(target_mode)})")

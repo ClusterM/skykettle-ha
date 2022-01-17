@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_send, async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.const import *
 
 from .skykettle import SkyKettle
@@ -18,7 +17,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class SkySwitch(SwitchEntity):
-    """Representation of a demo switch."""
+    """Representation of a SkyKettle switch device."""
 
     def __init__(self, hass, entry):
         """Initialize the switch device."""
@@ -37,9 +36,13 @@ class SkySwitch(SwitchEntity):
         return self.hass.data[DOMAIN][self.entry.entry_id][DATA_CONNECTION]
 
     @property
+    def unique_id(self):
+        return f"{self.entry.entry_id}_switch"
+
+    @property
     def name(self):
         """Name of the entity."""
-        return self.entry.data.get(CONF_FRIENDLY_NAME, FRIENDLY_NAME)
+        return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " switch"
 
     @property
     def device_info(self):
@@ -52,7 +55,7 @@ class SkySwitch(SwitchEntity):
     @property
     def should_poll(self):
         return False
-    
+
     @property
     def assumed_state(self):
         return False
@@ -60,10 +63,6 @@ class SkySwitch(SwitchEntity):
     @property
     def available(self):
         return self.kettle.available
-    
-    @property
-    def unique_id(self):
-        return self.entry.entry_id + "_switch"
 
     @property
     def entity_category(self):
@@ -73,7 +72,7 @@ class SkySwitch(SwitchEntity):
     def is_on(self):
         """If the switch is currently on or off."""
         return self.kettle.target_mode != None
-    
+
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self.kettle.set_target_mode(SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL])
