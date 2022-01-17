@@ -32,14 +32,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_PERSISTENT_CONNECTION]
     )
     hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION] = kettle
-    
+
     async def poll(now, **kwargs) -> None:
         await kettle.update()
         async_dispatcher_send(hass, DISPATCHER_UPDATE)
         if hass.data[DOMAIN][DATA_WORKING]:
             hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(
                 hass, timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]), poll)
-    
+
     hass.data[DOMAIN][DATA_WORKING] = True
     hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(
         hass, timedelta(seconds=1), poll)
@@ -49,23 +49,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-    
+
     return True
 
 def device_info(entry):
-    model = entry.data.get(ATTR_MODEL, None)
-    sw_version = entry.data.get(ATTR_SW_VERSION, None)
     return DeviceInfo(
+        name=entry.data.get(CONF_FRIENDLY_NAME, FRIENDLY_NAME),
         manufacturer=MANUFACTORER,
-        model=model,
-        sw_version=sw_version,
+        model=entry.data.get(CONF_FRIENDLY_NAME, None),
+        sw_version=entry.data.get(ATTR_SW_VERSION, None),
         identifiers={
             (DOMAIN, entry.data[CONF_MAC])
         },
-        connections={                
+        connections={
             ("mac", entry.data[CONF_MAC])
-        },
-        suggested_area=SUGGESTED_AREA
+        }
     )
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -76,7 +74,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_unload(entry, component)
         )
     hass.data[DOMAIN][DATA_CANCEL]()
-    await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].stop)    
+    await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].stop)
     del hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION]
     hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION] = None
     return True

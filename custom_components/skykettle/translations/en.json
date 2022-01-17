@@ -2,24 +2,40 @@
     "title": "SkyKettle",
     "config": {
         "abort": {
-            "already_configured": "Integration for this device is already configured"
+            "already_configured": "Integration for this device is already configured.",
+            "hcitool_not_found": "hcitool binary not found.",
+            "hatttool_not_found": "hatttool binary not found.",
+            "permission_error": "Permission error, make sure that hcitool and hatttool are granted with privileges (see manual).",
+            "unknown": "Unknown error, please check logs."
         },
         "error": {
             "invalid_mac": "MAC address must be in the form 'AA:BB:CC:DD:EE:FF'."
         },
         "step": {
             "user": {
+                "title": "Automatic discovery of the kettle",
+                "description": "Make sure that the Kettle is on the stand, it's plugged into the outlet then proceed."
+            },
+            "scan": {
                 "title": "SkyKettle MAC Address",
-                "description": "Select MAC address of your kettle.",
+                "description": "Select your kettle.",
                 "data": {
-                    "mac": "MAC address of the kettle"
+                    "mac": "MAC address of the kettle."
+                }
+            },
+            "manual_mac": {
+                "title": "SkyKettle MAC Address",
+                "description": "Enter MAC address of your kettle.",
+                "data": {
+                    "mac": "MAC address of the kettle."
                 }
             },
             "init": {
                 "title": "SkyKettle Options",
+                "description": "Finally, you can tune some options if your want.",
                 "data": {
-                    "scan_interval": "Kettle polling interfal",
-                    "persistent_connection": "Persistent connection"
+                    "persistent_connection": "Persistent connection (faster but exclusive, e.g. you can't use the official app while this integration is in work)",
+                    "scan_interval": "Kettle polling interfal in seconds (very low values recommended only for persistent connection)"
                 }
             }
         }
@@ -29,8 +45,8 @@
             "init": {
                 "title": "SkyKettle Options",
                 "data": {
-                    "scan_interval": "Kettle status query interfal",
-                    "persistent_connection": "Persistent connection"
+                    "persistent_connection": "Persistent connection. Faster but exclusive, e.g. you can't use the official app while this integration is in work.",
+                    "scan_interval": "Kettle polling interfal in seconds. Very low values recommended only for persistent connection."
                 }
             }
         }

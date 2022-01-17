@@ -49,15 +49,11 @@ class KettleLight(LightEntity):
     @property
     def name(self):
         """Name of the entity."""
-        return FRIENDLY_NAME + " light"
+        return self.entry.data.get(CONF_FRIENDLY_NAME, FRIENDLY_NAME)
 
     @property
     def device_info(self):
         return self.hass.data[DOMAIN][DATA_DEVICE_INFO]()
-
-    @property
-    def icon(self):
-        return "mdi:kettle"
 
     @property
     def entity_category(self):

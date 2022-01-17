@@ -249,7 +249,7 @@ class KettleConnection(SkyKettle):
                 await asyncio.sleep(KettleConnection.TRIES_INTERVAL)
                 await self.update(tries=tries-1)
             elif type(ex) != pexpect.exceptions.TIMEOUT:
-                _LOGGER.error(f"{traceback.format_exc()}")
+                _LOGGER.error(traceback.format_exc())
             else:
                 _LOGGER.debug(f"Timeout")
                 #_LOGGER.warning(f"{type(ex).__name__}: {str(ex)}")

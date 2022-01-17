@@ -41,7 +41,11 @@ class SkyWaterHeater(WaterHeaterEntity):
     @property
     def name(self):
         """Name of the entity."""
-        return FRIENDLY_NAME
+        return self.entry.data.get(CONF_FRIENDLY_NAME, FRIENDLY_NAME)
+
+    @property
+    def icon(self):
+        return "mdi:kettle"
 
     @property
     def device_class(self):
