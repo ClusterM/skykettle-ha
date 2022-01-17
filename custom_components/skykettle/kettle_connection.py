@@ -33,6 +33,7 @@ class KettleConnection(SkyKettle):
         self._iter = 0
         self._connect_lock = asyncio.Lock()
         self._command_lock = asyncio.Lock()
+        self._update_lock = asyncio.Lock()
         self._last_set_target = 0
         self._last_get_stats = 0
         self._last_connect_ok = False
@@ -162,68 +163,74 @@ class KettleConnection(SkyKettle):
         if not self.persistent:
             await self.disconnect()
     
-    async def update(self, tries=None):
+    async def update(self, tries=MAX_TRIES):
         try:
-            if self._disposed: return
-            if tries == None: tries = KettleConnection.MAX_TRIES
-            _LOGGER.debug(f"Updating")
-            await self._connect_if_need()
+            async with self._update_lock: 
+                if self._disposed: return
+                _LOGGER.debug(f"Updating")
+                await self._connect_if_need()
 
-            self._status = await self.get_status()
+                self._status = await self.get_status()
 
-            if self._target_state != None:
-                _LOGGER.debug(f"Target state: {self._target_state}")
-                target_mode, target_temp = self._target_state
-                target_temp = self.limit_temp(target_temp)
-                if target_mode in [SkyKettle.MODE_BOIL_HEAT, SkyKettle.MODE_HEAT] and target_temp < SkyKettle.MIN_TEMP:
-                    target_mode = None
-                if target_mode == None and self._status.is_on:
-                    _LOGGER.info("Need to turn off the kettle")
-                    await self.turn_off()
-                    await asyncio.sleep(0.2)
-                    self._status = await self.get_status()
-                elif target_mode != None and not self._status.is_on:
-                    _LOGGER.info("Need to set mode and turn on the kettle")
-                    await self.set_main_mode(target_mode, target_temp, self._status.boil_time)
-                    await self.turn_on()
-                    await asyncio.sleep(0.2)
-                    self._status = await self.get_status()
-                elif target_mode != None  and (
-                        target_mode != self._status.mode or
-                        (target_mode in [SkyKettle.MODE_HEAT, SkyKettle.MODE_BOIL_HEAT] and 
-                         target_temp != self._status.target_temp)):
-                    _LOGGER.info("Need to switch mode of the kettle and restart it")
-                    await self.turn_off()
-                    await self.set_main_mode(target_mode, target_temp, self._status.boil_time)
-                    await self.turn_on()
-                    await asyncio.sleep(0.2)
-                    self._status = await self.get_status()
-                self._target_state = None
+                # If there is scheduled state
+                if self._target_state != None:
+                    _LOGGER.info(f"Target state: {self._target_state}")
+                    target_mode, target_temp = self._target_state
+                    # How to set mode?
+                    if target_mode == None and self._status.is_on:
+                        _LOGGER.info("Need to turn off the kettle...")
+                        await self.turn_off()
+                        _LOGGER.info("The kettle was turned off")
+                        await asyncio.sleep(0.2)
+                        self._status = await self.get_status()
+                    elif target_mode != None and not self._status.is_on:
+                        _LOGGER.info("Need to set mode and turn on the kettle...")
+                        await self.set_main_mode(target_mode, target_temp, self._status.boil_time)
+                        _LOGGER.info("New mode was set")
+                        await self.turn_on()
+                        _LOGGER.info("The kettle was turned on")
+                        await asyncio.sleep(0.2)
+                        self._status = await self.get_status()
+                    elif target_mode != None  and (
+                            target_mode != self._status.mode or
+                            (target_mode in [SkyKettle.MODE_HEAT, SkyKettle.MODE_BOIL_HEAT] and 
+                            target_temp != self._status.target_temp)):
+                        _LOGGER.info("Need to switch mode of the kettle and restart it")
+                        await self.turn_off()
+                        _LOGGER.info("The kettle was turned off")
+                        await self.set_main_mode(target_mode, target_temp, self._status.boil_time)
+                        _LOGGER.info("New mode was set")
+                        await self.turn_on()
+                        _LOGGER.info("The kettle was turned on")
+                        await asyncio.sleep(0.2)
+                        self._status = await self.get_status()
+                    # Not scheduled anymore
+                    self._target_state = None
 
-            if self._last_get_stats + KettleConnection.STATS_INTERVAL < time():
-                self._last_get_stats = time()
-                # Not sure that every kettle/firmware supports this, so ignoring exceptions
-                try:
-                    self._stats = await self.get_stats()
-                except Exception as ex:
-                    _LOGGER.debug(f"Can't get stats ({type(ex).__name__}): {str(ex)}")
-                    pass
-                try:
-                    self._light_switch_boil = await self.get_light_switch(SkyKettle.LIGHT_BOIL)
-                    self._light_switch_sync = await self.get_light_switch(SkyKettle.LIGHT_SYNC)                    
-                except Exception as ex:
-                    _LOGGER.debug(f"Can't get light switches ({type(ex).__name__}): {str(ex)}")
-                try:
-                    self._lamp_auto_off_hours = await self.get_lamp_auto_off_hours()
-                except Exception as ex:
-                    _LOGGER.debug(f"Can't get lamp auto off hours ({type(ex).__name__}): {str(ex)}")
-                try:
-                    self._fresh_water = await self.get_fresh_water()
-                except Exception as ex:
-                    _LOGGER.debug(f"Can't get fresh water info ({type(ex).__name__}): {str(ex)}")
+                if self._last_get_stats + KettleConnection.STATS_INTERVAL < time():
+                    self._last_get_stats = time()
+                    # Not sure that every kettle/firmware supports this, so ignoring exceptions
+                    try:
+                        self._stats = await self.get_stats()
+                    except Exception as ex:
+                        _LOGGER.debug(f"Can't get stats ({type(ex).__name__}): {str(ex)}")
+                        pass
+                    try:
+                        self._light_switch_boil = await self.get_light_switch(SkyKettle.LIGHT_BOIL)
+                        self._light_switch_sync = await self.get_light_switch(SkyKettle.LIGHT_SYNC)                    
+                    except Exception as ex:
+                        _LOGGER.debug(f"Can't get light switches ({type(ex).__name__}): {str(ex)}")
+                    try:
+                        self._lamp_auto_off_hours = await self.get_lamp_auto_off_hours()
+                    except Exception as ex:
+                        _LOGGER.debug(f"Can't get lamp auto off hours ({type(ex).__name__}): {str(ex)}")
+                    try:
+                        self._fresh_water = await self.get_fresh_water()
+                    except Exception as ex:
+                        _LOGGER.debug(f"Can't get fresh water info ({type(ex).__name__}): {str(ex)}")
 
-            await self._disconnect_if_need()
-            self._successes.append(True)
+                await self._disconnect_if_need()
+                self._successes.append(True)
 
         except Exception as ex:
             if type(ex) == DisposedError: return
@@ -341,10 +348,16 @@ class KettleConnection(SkyKettle):
                 return self._status.mode
         return None
 
+    @property
+    def target_mode_str(self):
+        return self.get_mode_name(self.target_mode)
+
     async def set_target_temp(self, target_temp):
         """Set new temperature."""
+        if target_temp == self.target_temp: return # already set
         _LOGGER.info(f"Setting target temperature to {target_temp}")
-        target_mode = self.current_mode
+        target_mode = self.target_mode
+        # Some checks for mode
         if target_temp < SkyKettle.MIN_TEMP:
             # Just turn off
             target_mode = None             
@@ -363,13 +376,22 @@ class KettleConnection(SkyKettle):
 
     async def set_target_mode(self, operation_mode):
         """Set new operation mode."""
+        if operation_mode == self.target_mode_str: return # already set
         _LOGGER.info(f"Setting target mode to {operation_mode}")
         target_mode = None
         # Get target mode ID
         vs = [k for k, v in SkyKettle.MODE_NAMES.items() if v == operation_mode]
         if len(vs) > 0: target_mode = vs[0]
         # Set heating temperature if not set
-        target_temp = self.limit_temp(self.target_temp)
+        target_temp = self.target_temp
+        # Some checks for temperature
+        if target_mode in [SkyKettle.MODE_BOIL]:
+            target_temp = 0
+        elif target_mode in [SkyKettle.MODE_LAMP, SkyKettle.MODE_GAME]:
+            target_temp = 85
+        elif target_temp == None:
+            target_temp = SkyKettle.MIN_TEMP
+        target_temp = self.limit_temp(target_temp)
         if target_temp != self.target_temp:
             _LOGGER.info(f"Target temperature autoswitched to {target_temp}")
         await self._set_target_state(target_mode, target_temp)

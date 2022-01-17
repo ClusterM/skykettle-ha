@@ -1,9 +1,9 @@
-"""Demo platform that has two fake switches.""""""SkyKettle."""
+"""SkyKettle."""
 import logging
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_send, async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.const import *
 
 from .skykettle import SkyKettle
@@ -42,8 +42,8 @@ class SkySwitch(SwitchEntity):
         return FRIENDLY_NAME
 
     @property
-    def device_class(self):
-        return SwitchDeviceClass.SWITCH
+    def device_info(self):
+        return self.hass.data[DOMAIN][DATA_DEVICE_INFO]()
 
     @property
     def icon(self):
@@ -51,20 +51,7 @@ class SkySwitch(SwitchEntity):
 
     @property
     def device_info(self):
-        model = self.entry.data.get(ATTR_MODEL, None)
-        sw_version = self.entry.data.get(ATTR_SW_VERSION, None)
-        return DeviceInfo(
-            manufacturer=MANUFACTORER,
-            model=model,
-            sw_version=sw_version,
-            identifiers={
-                (DOMAIN, self.entry.data[CONF_MAC])
-            },
-            connections={                
-                ("mac", self.entry.data[CONF_MAC])
-            },
-            suggested_area=SUGGESTED_AREA
-        )
+        return self.hass.data[DOMAIN][DATA_DEVICE_INFO]()
 
     @property
     def should_poll(self):
@@ -83,14 +70,20 @@ class SkySwitch(SwitchEntity):
         return self.entry.entry_id + "_switch"
 
     @property
+    def entity_category(self):
+        return None
+
+    @property
     def is_on(self):
         """If the switch is currently on or off."""
-        return self.kettle.current_mode != None
+        return self.kettle.target_mode != None
     
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self.kettle.set_target_mode(SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL])
+        async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         await self.kettle.set_target_mode(None)
+        async_dispatcher_send(self.hass, DISPATCHER_UPDATE)

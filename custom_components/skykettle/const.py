@@ -3,7 +3,7 @@
 DOMAIN = "skykettle"
 FRIENDLY_NAME = "SkyKettle"
 MANUFACTORER = "Redmond"
-SUGGESTED_AREA = "Kitchen"
+SUGGESTED_AREA = "kitchen"
 
 REGEX_MAC = r"^(([0-9a-fA-F]){2}[:-]?){5}[0-9a-fA-F]{2}$"
 
@@ -15,6 +15,7 @@ DEFAULT_PERSISTENT_CONNECTION = True
 DATA_CONNECTION = "connection"
 DATA_CANCEL = "cancel"
 DATA_WORKING = "working"
+DATA_DEVICE_INFO = "device_info"
 
 DISPATCHER_UPDATE = "update"
 

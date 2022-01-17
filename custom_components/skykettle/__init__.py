@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import *
 import homeassistant.helpers.event as ev
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from .kettle_connection import KettleConnection
 from datetime import timedelta
 
@@ -13,7 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.WATER_HEATER,
-    Platform.SWITCH
+    Platform.SWITCH,
+    Platform.LIGHT
 ]
 
 
@@ -41,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][DATA_WORKING] = True
     hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(
         hass, timedelta(seconds=1), poll)
+    hass.data[DOMAIN][DATA_DEVICE_INFO] = lambda: device_info(entry)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -48,6 +51,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     
     return True
+
+def device_info(entry):
+    model = entry.data.get(ATTR_MODEL, None)
+    sw_version = entry.data.get(ATTR_SW_VERSION, None)
+    return DeviceInfo(
+        manufacturer=MANUFACTORER,
+        model=model,
+        sw_version=sw_version,
+        identifiers={
+            (DOMAIN, entry.data[CONF_MAC])
+        },
+        connections={                
+            ("mac", entry.data[CONF_MAC])
+        },
+        suggested_area=SUGGESTED_AREA
+    )
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""

@@ -5,8 +5,7 @@ from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_send, async_dispatcher_connect
 from homeassistant.const import *
 
 from .skykettle import SkyKettle
@@ -54,25 +53,12 @@ class SkyWaterHeater(WaterHeaterEntity):
 
     @property
     def device_info(self):
-        model = self.entry.data.get(ATTR_MODEL, None)
-        sw_version = self.entry.data.get(ATTR_SW_VERSION, None)
-        return DeviceInfo(
-            manufacturer=MANUFACTORER,
-            model=model,
-            sw_version=sw_version,
-            identifiers={
-                (DOMAIN, self.entry.data[CONF_MAC])
-            },
-            connections={                
-                ("mac", self.entry.data[CONF_MAC])
-            },
-            suggested_area=SUGGESTED_AREA
-        )
+        return self.hass.data[DOMAIN][DATA_DEVICE_INFO]()
 
     @property
     def should_poll(self):
         return False
-    
+
     @property
     def assumed_state(self):
         return False
@@ -80,15 +66,19 @@ class SkyWaterHeater(WaterHeaterEntity):
     @property
     def available(self):
         return self.kettle.available
-    
+
     @property
     def unique_id(self):
         return self.entry.entry_id + "_water_heater"
-    
+
+    @property
+    def entity_category(self):
+        return None
+
     @property
     def supported_features(self):
         return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-    
+
     @property
     def temperature_unit(self):
         return TEMP_CELSIUS
@@ -96,7 +86,7 @@ class SkyWaterHeater(WaterHeaterEntity):
     @property
     def min_temp(self):
         return ROOM_TEMP
-    
+
     @property
     def max_temp(self):
         return BOIL_TEMP
@@ -110,11 +100,6 @@ class SkyWaterHeater(WaterHeaterEntity):
         #     SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL_HEAT],
         #     SkyKettle.MODE_NAMES[SkyKettle.MODE_HEAT]
         # ]            
-
-    @property
-    def is_on(self):
-        """If the switch is currently on or off."""
-        return self.kettle.current_mode != None
 
     @property
     def extra_state_attributes(self):
@@ -149,6 +134,11 @@ class SkyWaterHeater(WaterHeaterEntity):
         }
         return data
 
+    @property
+    def is_on(self):
+        """If the switch is currently on or off."""
+        return self.kettle.target_mode != None
+
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self.kettle.set_target_mode(SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL])
@@ -167,16 +157,15 @@ class SkyWaterHeater(WaterHeaterEntity):
 
     @property 
     def current_operation(self):
-        op = self.kettle.current_mode
-        if op != None: return SkyKettle.MODE_NAMES[op]
-        return STATE_OFF
+        return self.kettle.target_mode_str
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)        
         await self.kettle.set_target_temp(target_temperature)
+        async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        _LOGGER.info(f"Setting target mode to {operation_mode}")
         await self.kettle.set_target_mode(operation_mode)
+        async_dispatcher_send(self.hass, DISPATCHER_UPDATE)

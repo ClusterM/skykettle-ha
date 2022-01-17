@@ -19,7 +19,7 @@ class SkyKettle():
         MODE_HEAT: "Heat",
         MODE_BOIL_HEAT: "Boil+Heat",
         MODE_LAMP: "Lamp",
-        MODE_GAME: "Game"
+        MODE_GAME: "Light"
     }
     
     LIGHT_BOIL = 0x00
@@ -102,14 +102,6 @@ class SkyKettle():
         _LOGGER.debug(f"Turned off")
 
     async def set_main_mode(self, mode, target_temp = 0, boil_time = 0):
-        if mode in [SkyKettle.MODE_HEAT, SkyKettle.MODE_BOIL_HEAT]:
-            if target_temp < SkyKettle.MIN_TEMP: raise ValueError(f"temperature too low: {target_temp}")
-            elif target_temp > SkyKettle.MAX_TEMP: raise ValueError(f"temperature too high: {target_temp}")
-        elif mode == SkyKettle.MODE_BOIL:
-            target_temp = 0
-        else:
-            target_temp = 85
-            
         data = pack("BxBxxxxxxxxxxBxx", int(mode), int(target_temp), int(0x80 + boil_time))
         r = await self.command(SkyKettle.COMMAND_SET_MAIN_MODE, data)
         if r[0] != 1: raise SkyKettleError("can't set mode")
@@ -206,12 +198,6 @@ class SkyKettle():
         _LOGGER.debug(f"Sound switched {'on' if on else 'off'}")
 
     async def set_fresh_water(self, on, unknown1=48):
-        # r = await self.command(SkyKettle.COMMAND_GET_FRESH_WATER, [0x00])
-        # on_old, unknown1_old, unknown2_old = unpack("<x?HHxxxxxxxxxx", r)
-        # _LOGGER.debug(f"Fresh water old values: {'on' if on_old else 'off'}, unknown1={unknown1_old}, unknown2={unknown2_old}")
-        #unknown1 = 0x30
-        #unknown2 = 0x09
-        #unknown1 = 1
         data = pack("<x?Hxxxxxxxxxxxx", on, int(unknown1))
         r = await self.command(SkyKettle.COMMAND_SET_FRESH_WATER, data)
         _LOGGER.debug(f"Fresh water notification switched {'on' if on else 'off'}")
