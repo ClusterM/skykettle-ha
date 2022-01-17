@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
-    )
+        )
     
     return True
 
@@ -74,7 +74,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_unload(entry, component)
-    )
+        )
     hass.data[DOMAIN][DATA_CANCEL]()
     await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].stop)    
     del hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION]
