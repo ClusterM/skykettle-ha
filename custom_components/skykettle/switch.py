@@ -39,15 +39,11 @@ class SkySwitch(SwitchEntity):
     @property
     def name(self):
         """Name of the entity."""
-        return FRIENDLY_NAME
+        return FRIENDLY_NAME + " switch"
 
     @property
     def device_info(self):
         return self.hass.data[DOMAIN][DATA_DEVICE_INFO]()
-
-    @property
-    def icon(self):
-        return "mdi:kettle"
 
     @property
     def device_info(self):

@@ -49,7 +49,7 @@ class KettleLight(LightEntity):
     @property
     def name(self):
         """Name of the entity."""
-        return FRIENDLY_NAME
+        return FRIENDLY_NAME + " light"
 
     @property
     def device_info(self):

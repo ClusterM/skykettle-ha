@@ -48,10 +48,6 @@ class SkyWaterHeater(WaterHeaterEntity):
         return DOMAIN
 
     @property
-    def icon(self):
-        return "mdi:kettle"
-
-    @property
     def device_info(self):
         return self.hass.data[DOMAIN][DATA_DEVICE_INFO]()
 
