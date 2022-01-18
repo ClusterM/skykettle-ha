@@ -127,7 +127,7 @@ class SkyWaterHeater(WaterHeaterEntity):
             "sound_enabled": self.kettle.sound_enabled,
             "color_interval": self.kettle.color_interval,
             "boil_time": self.kettle.boil_time,
-            "water_hours": self.kettle.water_hours,
+            "stale_water_hours": self.kettle.water_hours,
             "lamp_auto_off_hours": self.kettle.lamp_auto_off_hours,
             "light_switch_boil": self.kettle.light_switch_boil,
             "light_switch_sync": self.kettle.light_switch_sync,
