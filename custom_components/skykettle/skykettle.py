@@ -73,7 +73,7 @@ class SkyKettle():
     Status = namedtuple("Status", ["mode", "target_temp", "sound_enabled", "current_temp",
         "color_interval", "is_on", "boil_time"])
     Stats = namedtuple("Stats", ["ontime", "energy_wh", "heater_on_count", "user_on_count"])
-    FreshWaterInfo = namedtuple("FreshWaterInfo", ["is_on", "unknown1", "water_hours"])
+    FreshWaterInfo = namedtuple("FreshWaterInfo", ["is_on", "unknown1", "water_freshness_hours"])
 
     @abstractmethod
     async def command(self, command, params=[]):
@@ -206,7 +206,7 @@ class SkyKettle():
     async def get_fresh_water(self):
         r = await self.command(SkyKettle.COMMAND_GET_FRESH_WATER, [0x00])
         info = SkyKettle.FreshWaterInfo(*unpack("<x?HHxxxxxxxxxx", r))
-        _LOGGER.debug(f"Fresh water notification is {'on' if info.is_on else 'off'}, unknown1={info.unknown1}, water_hours={info.water_hours}")
+        _LOGGER.debug(f"Fresh water notification is {'on' if info.is_on else 'off'}, unknown1={info.unknown1}, water_freshness_hours={info.water_freshness_hours}")
         return info
 
     async def get_stats(self):

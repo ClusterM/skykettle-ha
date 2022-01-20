@@ -163,13 +163,14 @@ class KettleConnection(SkyKettle):
         if not self.persistent:
             await self.disconnect()
 
-    async def update(self, tries=MAX_TRIES):
+    async def update(self, tries=MAX_TRIES, force_stats=False):
         try:
             async with self._update_lock:
                 if self._disposed: return
                 _LOGGER.debug(f"Updating")
                 await self._connect_if_need()
 
+                if not self.available: force_stats = True # Update stats after unavailable state
                 self._status = await self.get_status()
 
                 # If there is scheduled state
@@ -207,7 +208,7 @@ class KettleConnection(SkyKettle):
                     # Not scheduled anymore
                     self._target_state = None
 
-                if self._last_get_stats + KettleConnection.STATS_INTERVAL < time():
+                if self._last_get_stats + KettleConnection.STATS_INTERVAL < time() or force_stats:
                     self._last_get_stats = time()
                     # Not sure that every kettle/firmware supports this, so ignoring exceptions
                     try:
@@ -436,9 +437,9 @@ class KettleConnection(SkyKettle):
         return self._light_switch_sync
 
     @property
-    def water_hours(self):
+    def water_freshness_hours(self):
         if not self._fresh_water: return None
-        return self._fresh_water.water_hours
+        return self._fresh_water.water_freshness_hours
 
     @property
     def ontime(self):
