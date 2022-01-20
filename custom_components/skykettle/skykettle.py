@@ -8,6 +8,7 @@ from abc import abstractmethod
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class SkyKettle():
     MODE_BOIL = 0x00
     MODE_HEAT = 0x01

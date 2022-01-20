@@ -45,8 +45,8 @@ class SkySwitch(SwitchEntity):
         return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " switch"
 
     @property
-    def device_info(self):
-        return self.hass.data[DOMAIN][DATA_DEVICE_INFO]()
+    def device_class(self):
+        return SwitchDeviceClass.SWITCH
 
     @property
     def device_info(self):
