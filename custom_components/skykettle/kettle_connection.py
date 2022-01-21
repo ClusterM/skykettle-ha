@@ -157,14 +157,16 @@ class KettleConnection(SkyKettle):
         if not self.persistent:
             await self.disconnect()
 
-    async def update(self, tries=MAX_TRIES, force_stats=False):
+    async def update(self, tries=MAX_TRIES, force_stats=False, extra_action=None):
         try:
             async with self._update_lock:
                 if self._disposed: return
                 _LOGGER.debug(f"Updating")
+                if not self.available: force_stats = True # Update stats after unavailable state
                 await self._connect_if_need()
 
-                if not self.available: force_stats = True # Update stats after unavailable state
+                if extra_action: await extra_action
+
                 self._status = await self.get_status()
                 boil_time = self._status.boil_time
 
@@ -247,7 +249,8 @@ class KettleConnection(SkyKettle):
                         _LOGGER.debug(f"Can't get fresh water info ({type(ex).__name__}): {str(ex)}")
 
                 await self._disconnect_if_need()
-                self._successes.append(True)
+                self.add_stat(True)
+                return True
 
         except Exception as ex:
             if type(ex) == DisposedError: return
@@ -256,7 +259,7 @@ class KettleConnection(SkyKettle):
                 _LOGGER.warning(f"Can't set mode to {self._target_state} for {KettleConnection.TARGET_TTL} seconds, stop trying")
                 self._target_state = None
             if type(ex) == AuthError: return
-            self._successes.append(False)
+            self.add_stat(False)
             if type(ex) == pexpect.exceptions.TIMEOUT:
                 msg = "Timeout" # too many debug info
             else:
@@ -264,13 +267,16 @@ class KettleConnection(SkyKettle):
             if tries > 1:
                 _LOGGER.debug(f"{msg}, retry #{KettleConnection.MAX_TRIES - tries + 1}")
                 await asyncio.sleep(KettleConnection.TRIES_INTERVAL)
-                await self.update(tries=tries-1)
+                return await self.update(tries=tries-1)
             elif type(ex) != pexpect.exceptions.TIMEOUT:
                 _LOGGER.error(traceback.format_exc())
             else:
                 _LOGGER.debug(f"Timeout")
                 #_LOGGER.warning(f"{type(ex).__name__}: {str(ex)}")
+            return False
 
+    def add_stat(self, value):
+        self._successes.append(value)
         if len(self._successes) > 100: self._successes = self._successes[-100:]
 
     @staticmethod
@@ -482,6 +488,24 @@ class KettleConnection(SkyKettle):
         _LOGGER.info(f"Setting boil time to {value}")
         self._target_boil_time = value
         await self.update()
+
+    async def set_sound(self, value):
+        if await self.update(force_stats=False, extra_action=SkyKettle.set_sound(self, value)):
+            _LOGGER.info(f"Sound is set to {value}")
+        else:
+            _LOGGER.error(f"Can't set sound to {value}")
+
+    async def set_light_switch_sync(self, value):
+        if await self.update(force_stats=True, extra_action=self.set_light_switch(SkyKettle.LIGHT_SYNC, value)):
+            _LOGGER.info(f"Sync light is set to {value}")
+        else:
+            _LOGGER.error(f"Can't set sync light to {value}")
+
+    async def set_light_switch_boil(self, value):
+        if await self.update(force_stats=True, extra_action=self.set_light_switch(SkyKettle.LIGHT_BOIL, value)):
+            _LOGGER.info(f"Sync boil is set to {value}")
+        else:
+            _LOGGER.error(f"Can't boil sync light to {value}")
 
 class AuthError(Exception):
     pass

@@ -46,10 +46,7 @@ class SkySensor(SensorEntity):
 
     @property
     def unique_id(self):
-        if self.sensor_type == SENSOR_TYPE_WATER_FRESHNESS:
-            return f"{self.entry.entry_id}_water_freshness"
-        if self.sensor_type == SENSOR_TYPE_SUCCESS_RATE:
-            return f"{self.entry.entry_id}_success_rate"
+        return f"{self.entry.entry_id}_{self.sensor_type}"
 
     @property
     def name(self):

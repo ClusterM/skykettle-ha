@@ -94,12 +94,6 @@ class SkyWaterHeater(WaterHeaterEntity):
     @property
     def operation_list(self):
         return [STATE_OFF] + list(SkyKettle.MODE_NAMES.values())
-        # return [
-        #     STATE_OFF,
-        #     SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL],
-        #     SkyKettle.MODE_NAMES[SkyKettle.MODE_BOIL_HEAT],
-        #     SkyKettle.MODE_NAMES[SkyKettle.MODE_HEAT]
-        # ]
 
     @property
     def extra_state_attributes(self):
