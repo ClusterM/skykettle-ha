@@ -1,8 +1,8 @@
 """SkyKettle."""
 import logging
 
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.const import *
 
@@ -28,7 +28,7 @@ class SkySensor(SensorEntity):
     """Representation of a SkyKettle sensor device."""
 
     def __init__(self, hass, entry, sensor_type):
-        """Initialize the switch device."""
+        """Initialize the sensor device."""
         self.hass = hass
         self.entry = entry
         self.sensor_type = sensor_type

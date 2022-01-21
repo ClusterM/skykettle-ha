@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.dispatcher import async_dispatcher_send, async_dispatcher_connect
 from homeassistant.const import *
 

@@ -40,6 +40,7 @@ class KettleConnection(SkyKettle):
         self._last_auth_ok = False
         self._successes = []
         self._target_state = None
+        self._target_boil_time = None
         self._status = None
         self._stats = None
         self._lamp_auto_off_hours = None
@@ -63,18 +64,11 @@ class KettleConnection(SkyKettle):
                 r = await self._child.expect([
                         r"value:([ 0-9a-f]*)\r\n.*?\[LE\]> ",
                         r"Disconnected\r\n.*?\[LE\]> ",
-                        #r"Invalid file descriptor.\r\n"
                     ], async_=True)
                 if r == 1:
                     _LOGGER.debug("'Disconnected' message received")
                     raise IOError("Disconnected")
-                # elif r == 2:
-                #     _LOGGER.error("'Invalid file descriptor' message received")
-                #     _LOGGER.debug(self._child)
-                #     #raise IOError("Invalid file descriptor")
-                #     continue
                 hex_response = self._child.match.group(1).decode().strip()
-                #_LOGGER.debug(f"Received (raw): {hex_response}")
                 r = bytes.fromhex(hex_response.replace(' ',''))
                 if r[0] != 0x55 or r[-1] != 0xAA:
                     raise IOError("Invalid response magic")
@@ -172,21 +166,40 @@ class KettleConnection(SkyKettle):
 
                 if not self.available: force_stats = True # Update stats after unavailable state
                 self._status = await self.get_status()
+                boil_time = self._status.boil_time
+
+                if self._target_boil_time != None and self._target_boil_time != boil_time:
+                    try:
+                        _LOGGER.debug(f"Need to update boil time from {boil_time} to {self._target_boil_time}")
+                        boil_time = self._target_boil_time
+                        if self._target_state == None: # To return previous state
+                            self._target_state = self._status.mode if self._status.is_on else None, self._status.target_temp
+                            self._last_set_target = time()
+                        if self._status.is_on:
+                            await self.turn_off()
+                            await asyncio.sleep(0.2)
+                        await self.set_main_mode(self._status.mode, self._status.target_temp, boil_time)
+                        _LOGGER.info(f"Boil time is succesfully set to {boil_time}")
+                    except Exception as ex:
+                        _LOGGER.error(f"Can't update boil time ({type(ex).__name__}): {str(ex)}")
+                    self._status = await self.get_status()
+                self._target_boil_time = None
 
                 # If there is scheduled state
                 if self._target_state != None:
-                    _LOGGER.info(f"Target state: {self._target_state}")
                     target_mode, target_temp = self._target_state
                     # How to set mode?
                     if target_mode == None and self._status.is_on:
+                        _LOGGER.info(f"State: {self._status} -> {self._target_state}")
                         _LOGGER.info("Need to turn off the kettle...")
                         await self.turn_off()
                         _LOGGER.info("The kettle was turned off")
                         await asyncio.sleep(0.2)
                         self._status = await self.get_status()
                     elif target_mode != None and not self._status.is_on:
+                        _LOGGER.info(f"State: {self._status} -> {self._target_state}")
                         _LOGGER.info("Need to set mode and turn on the kettle...")
-                        await self.set_main_mode(target_mode, target_temp, self._status.boil_time)
+                        await self.set_main_mode(target_mode, target_temp, boil_time)
                         _LOGGER.info("New mode was set")
                         await self.turn_on()
                         _LOGGER.info("The kettle was turned on")
@@ -196,15 +209,18 @@ class KettleConnection(SkyKettle):
                             target_mode != self._status.mode or
                             (target_mode in [SkyKettle.MODE_HEAT, SkyKettle.MODE_BOIL_HEAT] and
                             target_temp != self._status.target_temp)):
+                        _LOGGER.info(f"State: {self._status} -> {self._target_state}")
                         _LOGGER.info("Need to switch mode of the kettle and restart it")
                         await self.turn_off()
                         _LOGGER.info("The kettle was turned off")
-                        await self.set_main_mode(target_mode, target_temp, self._status.boil_time)
+                        await self.set_main_mode(target_mode, target_temp, boil_time)
                         _LOGGER.info("New mode was set")
                         await self.turn_on()
                         _LOGGER.info("The kettle was turned on")
                         await asyncio.sleep(0.2)
                         self._status = await self.get_status()
+                    else:
+                        _LOGGER.debug(f"There is no reason to update state")
                     # Not scheduled anymore
                     self._target_state = None
 
@@ -392,7 +408,8 @@ class KettleConnection(SkyKettle):
             target_temp = 85
         elif target_temp == None:
             target_temp = SkyKettle.MIN_TEMP
-        target_temp = self.limit_temp(target_temp)
+        else:
+            target_temp = self.limit_temp(target_temp)
         if target_temp != self.target_temp:
             _LOGGER.info(f"Target temperature autoswitched to {target_temp}")
         await self._set_target_state(target_mode, target_temp)
@@ -460,6 +477,11 @@ class KettleConnection(SkyKettle):
     def user_on_count(self):
         if not self._stats: return None
         return self._stats.user_on_count
+
+    async def set_boil_time(self, value):
+        _LOGGER.info(f"Setting boil time to {value}")
+        self._target_boil_time = value
+        await self.update()
 
 class AuthError(Exception):
     pass
