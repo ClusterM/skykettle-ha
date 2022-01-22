@@ -157,7 +157,7 @@ class KettleConnection(SkyKettle):
         if not self.persistent:
             await self.disconnect()
 
-    async def update(self, tries=MAX_TRIES, force_stats=False, extra_action=None):
+    async def update(self, tries=MAX_TRIES, force_stats=False, extra_action=None, commit=False):
         try:
             async with self._update_lock:
                 if self._disposed: return
@@ -169,6 +169,8 @@ class KettleConnection(SkyKettle):
 
                 self._status = await self.get_status()
                 boil_time = self._status.boil_time
+
+                if commit: await self.commit()
 
                 if self._target_boil_time != None and self._target_boil_time != boil_time:
                     try:
@@ -487,25 +489,19 @@ class KettleConnection(SkyKettle):
     async def set_boil_time(self, value):
         _LOGGER.info(f"Setting boil time to {value}")
         self._target_boil_time = value
-        await self.update()
+        await self.update(commit=True)
 
     async def set_sound(self, value):
-        if await self.update(force_stats=False, extra_action=SkyKettle.set_sound(self, value)):
+        if await self.update(force_stats=False, extra_action=SkyKettle.set_sound(self, value), commit=True):
             _LOGGER.info(f"Sound is set to {value}")
         else:
             _LOGGER.error(f"Can't set sound to {value}")
 
-    async def set_light_switch_sync(self, value):
-        if await self.update(force_stats=True, extra_action=self.set_light_switch(SkyKettle.LIGHT_SYNC, value)):
-            _LOGGER.info(f"Sync light is set to {value}")
+    async def set_light_switch(self, light_type, value):
+        if await self.update(force_stats=True, extra_action=SkyKettle.set_light_switch(self, light_type, value), commit=True):
+            _LOGGER.info(f"Light 0x{light_type:02X} is set to {value}")
         else:
-            _LOGGER.error(f"Can't set sync light to {value}")
-
-    async def set_light_switch_boil(self, value):
-        if await self.update(force_stats=True, extra_action=self.set_light_switch(SkyKettle.LIGHT_BOIL, value)):
-            _LOGGER.info(f"Sync boil is set to {value}")
-        else:
-            _LOGGER.error(f"Can't boil sync light to {value}")
+            _LOGGER.error(f"Can't set light 0x{light_type:02X} to {value}")
 
 class AuthError(Exception):
     pass

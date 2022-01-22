@@ -125,9 +125,9 @@ class SkySwitch(SwitchEntity):
         if self.switch_type == SWITCH_SOUND:
             await self.kettle.set_sound(True)
         if self.switch_type == SWITCH_LIGHT_SYNC:
-            await self.kettle.set_light_switch_sync(True)
+            await self.kettle.set_light_switch(SkyKettle.LIGHT_SYNC, True)
         if self.switch_type == SWITCH_LIGHT_BOIL:
-            await self.kettle.set_light_switch_boil(True)
+            await self.kettle.set_light_switch(SkyKettle.LIGHT_BOIL, True)
         async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
 
     async def async_turn_off(self, **kwargs):
@@ -137,7 +137,7 @@ class SkySwitch(SwitchEntity):
         if self.switch_type == SWITCH_SOUND:
             await self.kettle.set_sound(False)
         if self.switch_type == SWITCH_LIGHT_SYNC:
-            await self.kettle.set_light_switch_sync(False)
+            await self.kettle.set_light_switch(SkyKettle.LIGHT_SYNC, False)
         if self.switch_type == SWITCH_LIGHT_BOIL:
-            await self.kettle.set_light_switch_boil(False)
+            await self.kettle.set_light_switch(SkyKettle.LIGHT_BOIL, False)
         async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
