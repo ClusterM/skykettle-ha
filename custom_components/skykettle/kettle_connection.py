@@ -31,8 +31,6 @@ class KettleConnection(SkyKettle):
         self._connected = False
         self._auth_ok = False
         self._iter = 0
-        self._connect_lock = asyncio.Lock()
-        self._command_lock = asyncio.Lock()
         self._update_lock = asyncio.Lock()
         self._last_set_target = 0
         self._last_get_stats = 0
@@ -47,37 +45,37 @@ class KettleConnection(SkyKettle):
         self._light_switch_boil = None
         self._light_switch_sync = None
         self._fresh_water = None
+        self._colors = {}
         self._disposed = False
 
     async def command(self, command, params=[]):
-        async with self._command_lock:
-            if self._disposed:
-                raise DisposedError()
-            if not self._connected or not self._child:
-                raise IOError("not connected")
-            self._iter = (self._iter + 1) % 256
-            _LOGGER.debug(f"Writing command {command:02x}, data: [{' '.join([f'{c:02x}' for c in params])}]")
-            data = f"char-write-req 0x000e 55{self._iter:02x}{''.join([f'{c:02x}' for c in [command] + list(params)])}aa"
-            #_LOGGER.debug(f"Writing {data}")
-            self._child.sendline(data)
-            while True:
-                r = await self._child.expect([
-                        r"value:([ 0-9a-f]*)\r\n.*?\[LE\]> ",
-                        r"Disconnected\r\n.*?\[LE\]> ",
-                    ], async_=True)
-                if r == 1:
-                    _LOGGER.debug("'Disconnected' message received")
-                    raise IOError("Disconnected")
-                hex_response = self._child.match.group(1).decode().strip()
-                r = bytes.fromhex(hex_response.replace(' ',''))
-                if r[0] != 0x55 or r[-1] != 0xAA:
-                    raise IOError("Invalid response magic")
-                if r[1] == self._iter: break
-            if r[2] != command:
-                raise IOError("Invalid response command")
-            clean = bytes(r[3:-1])
-            _LOGGER.debug(f"Received (clean): {' '.join([f'{c:02x}' for c in clean])}")
-            return clean
+        if self._disposed:
+            raise DisposedError()
+        if not self._connected or not self._child:
+            raise IOError("not connected")
+        self._iter = (self._iter + 1) % 256
+        _LOGGER.debug(f"Writing command {command:02x}, data: [{' '.join([f'{c:02x}' for c in params])}]")
+        data = f"char-write-req 0x000e 55{self._iter:02x}{''.join([f'{c:02x}' for c in [command] + list(params)])}aa"
+        #_LOGGER.debug(f"Writing {data}")
+        self._child.sendline(data)
+        while True:
+            r = await self._child.expect([
+                    r"value:([ 0-9a-f]*)\r\n.*?\[LE\]> ",
+                    r"Disconnected\r\n.*?\[LE\]> ",
+                ], async_=True)
+            if r == 1:
+                _LOGGER.debug("'Disconnected' message received")
+                raise IOError("Disconnected")
+            hex_response = self._child.match.group(1).decode().strip()
+            r = bytes.fromhex(hex_response.replace(' ',''))
+            if r[0] != 0x55 or r[-1] != 0xAA:
+                raise IOError("Invalid response magic")
+            if r[1] == self._iter: break
+        if r[2] != command:
+            raise IOError("Invalid response command")
+        clean = bytes(r[3:-1])
+        _LOGGER.debug(f"Received (clean): {' '.join([f'{c:02x}' for c in clean])}")
+        return clean
 
     async def _connect(self):
         if self._disposed:
@@ -128,30 +126,28 @@ class KettleConnection(SkyKettle):
             self._child = None
 
     async def disconnect(self):
-        async with self._connect_lock:
-            try:
-                await self._disconnect()
-            except:
-                pass
-            await self._terminate()
+        try:
+            await self._disconnect()
+        except:
+            pass
+        await self._terminate()
 
     async def _connect_if_need(self):
-        async with self._connect_lock:
-            if not self._connected or not self._child or not self._child.isalive():
-                try:
-                    await self._connect()
-                    self._last_connect_ok = self._connected = True
-                except Exception as ex:
-                    self._last_connect_ok = False
-                    raise ex
+        if not self._connected or not self._child or not self._child.isalive():
+            try:
+                await self._connect()
+                self._last_connect_ok = self._connected = True
+            except Exception as ex:
+                self._last_connect_ok = False
+                raise ex
+        if not self._auth_ok:
+            self._last_auth_ok = self._auth_ok = await self.auth()
             if not self._auth_ok:
-                self._last_auth_ok = self._auth_ok = await self.auth()
-                if not self._auth_ok:
-                    _LOGGER.warning(f"Auth failed. You need to enable pairing mode on the kettle.")
-                    raise AuthError("Auth failed")
-                _LOGGER.debug("Auth ok")
-                await self.sync_time()
-                self._sw_version = await self.get_version()
+                _LOGGER.warning(f"Auth failed. You need to enable pairing mode on the kettle.")
+                raise AuthError("Auth failed")
+            _LOGGER.debug("Auth ok")
+            await self.sync_time()
+            self._sw_version = await self.get_version()
 
     async def _disconnect_if_need(self):
         if not self.persistent:
@@ -249,6 +245,11 @@ class KettleConnection(SkyKettle):
                         self._fresh_water = await self.get_fresh_water()
                     except Exception as ex:
                         _LOGGER.debug(f"Can't get fresh water info ({type(ex).__name__}): {str(ex)}")
+                    try:
+                        for lt in [SkyKettle.LIGHT_BOIL, SkyKettle.LIGHT_LAMP]:
+                            self._colors[lt] = await self.get_colors(lt)
+                    except Exception as ex:
+                        _LOGGER.debug(f"Can't get colors ({type(ex).__name__}): {str(ex)}")
 
                 await self._disconnect_if_need()
                 self.add_stat(True)
@@ -266,10 +267,10 @@ class KettleConnection(SkyKettle):
                 msg = "Timeout" # too many debug info
             else:
                 msg = f"{type(ex).__name__}: {str(ex)}"
-            if tries > 1:
+            if tries > 1 and extra_action == None:
                 _LOGGER.debug(f"{msg}, retry #{KettleConnection.MAX_TRIES - tries + 1}")
                 await asyncio.sleep(KettleConnection.TRIES_INTERVAL)
-                return await self.update(tries=tries-1)
+                return await self.update(tries=tries-1, force_stats=force_stats, commit=commit)
             elif type(ex) != pexpect.exceptions.TIMEOUT:
                 _LOGGER.error(traceback.format_exc())
             else:
@@ -462,6 +463,33 @@ class KettleConnection(SkyKettle):
         return self._light_switch_sync
 
     @property
+    def colors_boil(self):
+        return self._colors.get(SkyKettle.LIGHT_BOIL, None)
+
+    @property
+    def colors_lamp(self):
+        return self._colors.get(SkyKettle.LIGHT_LAMP, None)
+    
+    def get_color(self, color_type, n):
+        if color_type not in self._colors: return None
+        colors = self._colors[color_type]
+        if n == 0: return colors.r_low, colors.g_low, colors.b_low
+        if n == 1: return colors.r_mid, colors.g_mid, colors.b_mid
+        if n == 2: return colors.r_high, colors.g_high, colors.b_high
+
+    def get_brightness(self, color_type):
+        if color_type not in self._colors: return None
+        colors = self._colors[color_type]
+        return colors.brightness
+    
+    def get_temperature(self, color_type, n):
+        if color_type not in self._colors: return None
+        colors = self._colors[color_type]
+        if n == 0: return colors.temp_low
+        if n == 1: return colors.temp_mid
+        if n == 2: return colors.temp_high
+
+    @property
     def water_freshness_hours(self):
         if not self._fresh_water: return None
         return self._fresh_water.water_freshness_hours
@@ -490,6 +518,9 @@ class KettleConnection(SkyKettle):
         _LOGGER.info(f"Setting boil time to {value}")
         self._target_boil_time = value
         await self.update(commit=True)
+        
+    async def impulse_color(self, r, g, b, brightness):
+        await self.update(extra_action=SkyKettle.impulse_color(self, r, g, b, brightness))
 
     async def set_sound(self, value):
         if await self.update(force_stats=False, extra_action=SkyKettle.set_sound(self, value), commit=True):
@@ -502,6 +533,41 @@ class KettleConnection(SkyKettle):
             _LOGGER.info(f"Light 0x{light_type:02X} is set to {value}")
         else:
             _LOGGER.error(f"Can't set light 0x{light_type:02X} to {value}")
+
+    async def set_color(self, color_type, n, color):
+        if color_type not in self._colors: return
+        colors = self._colors[color_type]
+        r, g, b = color
+        if n == 0: colors = colors._replace(r_low=int(r), g_low=int(g), b_low=int(b))
+        if n == 1: colors = colors._replace(r_mid=int(r), g_mid=int(g), b_mid=int(b))
+        if n == 2: colors = colors._replace(r_high=int(r), g_high=int(g), b_high=int(b))
+        if await self.update(extra_action=self.set_colors(colors), commit=True):
+            self._colors[color_type] = colors
+
+    async def set_brightness(self, color_type, brightness):
+        if color_type not in self._colors: return
+        colors = self._colors[color_type]
+        colors = colors._replace(brightness=brightness, unknown1=brightness, unknown2=brightness)
+        if await self.update(extra_action=self.set_colors(colors), commit=True):
+            self._colors[color_type] = colors
+
+    async def set_temperature(self, color_type, n, temp):
+        if color_type not in self._colors: return        
+        colors = self._colors[color_type]
+        temp = int(temp)
+        if n == 0: colors = colors._replace(temp_low=temp)
+        if n == 1: colors = colors._replace(temp_mid=temp)
+        if n == 2: colors = colors._replace(temp_high=temp)
+        if await self.update(extra_action=self.set_colors(colors), commit=True):
+            self._colors[color_type] = colors
+
+    async def set_lamp_color_interval(self, secs):
+        await self.update(extra_action=SkyKettle.set_lamp_color_interval(self, secs), commit=True)
+
+    async def set_lamp_auto_off_hours(self, hours):
+        if await self.update(extra_action=SkyKettle.set_lamp_auto_off_hours(self, hours), commit=True):
+            self._lamp_auto_off_hours = hours
+
 
 class AuthError(Exception):
     pass

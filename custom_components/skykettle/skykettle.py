@@ -139,7 +139,7 @@ class SkyKettle():
         return t, offset
 
     async def set_lamp_auto_off_hours(self, hours):
-        data = pack("<H", hours)
+        data = pack("<H", int(hours))
         r = await self.command(SkyKettle.COMMAND_SET_AUTO_OFF_HOURS, data)
         if r[0] != 0: raise SkyKettleError("can't set lamp auto off hours")
         _LOGGER.debug(f"Updated lamp auto off hours={hours}")
@@ -168,7 +168,7 @@ class SkyKettle():
         _LOGGER.debug(f"Settings commited")
 
     async def set_lamp_color_interval(self, secs):
-        data = pack("<H", secs)
+        data = pack("<H", int(secs))
         r = await self.command(SkyKettle.COMMAND_SET_COLOR_INTERVAL, data)
         if r[0] != 0: raise SkyKettleError("can't set lamp color change interval")
         _LOGGER.debug(f"Updated lamp color interval secs={secs}")

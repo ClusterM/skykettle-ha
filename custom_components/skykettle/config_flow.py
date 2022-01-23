@@ -31,7 +31,7 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a new SkyKettleConfigFlow."""
         self.entry = entry
         self.config = {} if not entry else dict(entry.data.items())
-        _LOGGER.debug(f"initial config: {self.config}")
+        # _LOGGER.debug(f"initial config: {self.config}")
 
     async def init_mac(self, mac):
         mac = mac.upper()
@@ -71,8 +71,11 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             macs = await ble_scan(scan_time=BLE_SCAN_TIME)
+            _LOGGER.debug(f"Scan result: {scan}")
             macs_filtered = [mac for mac in macs if mac.name and mac.name.startswith("RK-")]
-            if len(macs_filtered) > 0: macs = macs_filtered
+            if len(macs_filtered) > 0:
+                macs = macs_filtered
+                _LOGGER.debug(f"Filtered scan result: {scan}")
             mac_list = [f"{r.mac} ({r.name})" for r in macs]
             mac_list = mac_list + ["..."] # Manual
             schema = vol.Schema(
@@ -80,8 +83,10 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_MAC): vol.In(mac_list)
             })
         except PermissionError:
+            _LOGGER.error(traceback.format_exc())
             return self.async_abort(reason='permission_error')
         except FileNotFoundError:
+            _LOGGER.error(traceback.format_exc())
             return self.async_abort(reason='hcitool_not_found')
         except Exception:
             _LOGGER.error(traceback.format_exc())
@@ -150,9 +155,10 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.config[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
             self.config[CONF_PERSISTENT_CONNECTION] = user_input[CONF_PERSISTENT_CONNECTION]
             fname = f"{self.config.get(CONF_FRIENDLY_NAME, FRIENDLY_NAME)} ({self.config[CONF_MAC]})"
-            _LOGGER.debug(f"saving config: {self.config}")
+            # _LOGGER.debug(f"saving config: {self.config}")
             if self.entry:
                 self.hass.config_entries.async_update_entry(self.entry, data=self.config)
+            _LOGGER.info(f"Config saved")
             return self.async_create_entry(
                 title=fname, data=self.config if not self.entry else {}
             )

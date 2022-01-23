@@ -56,7 +56,7 @@ class SkySwitch(SwitchEntity):
     def name(self):
         """Name of the entity."""
         if self.switch_type == SWITCH_MAIN:
-            return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " main switch"
+            return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip()
         if self.switch_type == SWITCH_SOUND:
             return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " enable sound"
         if self.switch_type == SWITCH_LIGHT_SYNC:
@@ -67,13 +67,13 @@ class SkySwitch(SwitchEntity):
     @property
     def icon(self):
         if self.switch_type == SWITCH_MAIN:
-            return None
+            return "mdi:cog"
         if self.switch_type == SWITCH_SOUND:
             return "mdi:volume-high"
         if self.switch_type == SWITCH_LIGHT_SYNC:
-            return "mdi:lightbulb"
+            return "mdi:sync"
         if self.switch_type == SWITCH_LIGHT_BOIL:
-            return "mdi:lightbulb"
+            return "mdi:alarm-light"
 
     @property
     def device_class(self):
@@ -92,8 +92,15 @@ class SkySwitch(SwitchEntity):
         return False
 
     @property
-    def available(self):
-        return self.kettle.available
+    def available(self):        
+        if self.switch_type == SWITCH_MAIN:
+            return self.kettle.available
+        if self.switch_type == SWITCH_SOUND:
+            return self.kettle.available and self.kettle.sound_enabled != None
+        if self.switch_type == SWITCH_LIGHT_SYNC:
+            return self.kettle.available and self.kettle.light_switch_sync != None
+        if self.switch_type == SWITCH_LIGHT_BOIL:
+            return self.kettle.available and self.kettle.light_switch_boil != None
 
     @property
     def entity_category(self):

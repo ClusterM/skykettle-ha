@@ -85,7 +85,7 @@ class SkySensor(SensorEntity):
     @property
     def available(self):
         if self.sensor_type == SENSOR_TYPE_WATER_FRESHNESS:
-            return self.kettle.available
+            return self.kettle.available and self.kettle.water_freshness_hours != None
         if self.sensor_type == SENSOR_TYPE_SUCCESS_RATE:
             return True # Always readable
 
