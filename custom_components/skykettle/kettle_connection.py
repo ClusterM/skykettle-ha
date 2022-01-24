@@ -1,7 +1,7 @@
 import logging
 import pexpect
 import asyncio
-from time import time, sleep
+from time import monotonic, sleep
 try:
     from const import *
 except ModuleNotFoundError:
@@ -20,7 +20,7 @@ class KettleConnection(SkyKettle):
     MAX_TRIES = 5
     TRIES_INTERVAL = 0.5
     STATS_INTERVAL = 60
-    TARGET_TTL = 60
+    TARGET_TTL = 10
 
     def __init__(self, mac, key, persistent=True):
         SkyKettle.__init__(self)
@@ -174,7 +174,7 @@ class KettleConnection(SkyKettle):
                         boil_time = self._target_boil_time
                         if self._target_state == None: # To return previous state
                             self._target_state = self._status.mode if self._status.is_on else None, self._status.target_temp
-                            self._last_set_target = time()
+                            self._last_set_target = monotonic()
                         if self._status.is_on:
                             await self.turn_off()
                             await asyncio.sleep(0.2)
@@ -224,8 +224,8 @@ class KettleConnection(SkyKettle):
                     # Not scheduled anymore
                     self._target_state = None
 
-                if self._last_get_stats + KettleConnection.STATS_INTERVAL < time() or force_stats:
-                    self._last_get_stats = time()
+                if self._last_get_stats + KettleConnection.STATS_INTERVAL < monotonic() or force_stats:
+                    self._last_get_stats = monotonic()
                     # Not sure that every kettle/firmware supports this, so ignoring exceptions
                     try:
                         self._stats = await self.get_stats()
@@ -258,7 +258,7 @@ class KettleConnection(SkyKettle):
         except Exception as ex:
             if type(ex) == DisposedError: return
             await self.disconnect()
-            if self._target_state != None and self._last_set_target + KettleConnection.TARGET_TTL < time():
+            if self._target_state != None and self._last_set_target + KettleConnection.TARGET_TTL < monotonic():
                 _LOGGER.warning(f"Can't set mode to {self._target_state} for {KettleConnection.TARGET_TTL} seconds, stop trying")
                 self._target_state = None
             if type(ex) == AuthError: return
@@ -303,7 +303,7 @@ class KettleConnection(SkyKettle):
 
     async def _set_target_state(self, target_mode, target_temp = 0):
         self._target_state = target_mode, target_temp
-        self._last_set_target = time()
+        self._last_set_target = monotonic()
         await self.update()
 
     async def cancel_target(self):
