@@ -2,7 +2,7 @@
     "title": "SkyKettle",
     "config": {
         "abort": {
-            "already_configured": "Integration for this device is already configured.",
+            "already_configured": "Integration for this kettle is already configured.",
             "hcitool_not_found": "hcitool binary not found.",
             "hatttool_not_found": "hatttool binary not found.",
             "permission_error": "Permission error, make sure that hcitool and hatttool are granted with privileges (check instructions).",
@@ -10,7 +10,7 @@
         },
         "error": {
             "no_scan": "I can't find any BLE device for some reason, you can enter MAC address manually on the next step.",
-            "invalid_mac": "MAC address must be in the form 'AA:BB:CC:DD:EE:FF'.",
+            "invalid_mac": "MAC address must be in the form \"AA:BB:CC:DD:EE:FF\".",
             "cant_connect": "Can't connect to the kettle. Please make sure that it's on the stand, hatttool is granted with privileges (check instrucrions) and official application is not connected to the kettle.",
             "cant_auth": "Connected to the kettle but pairing failed. Please try again."
         },
@@ -23,14 +23,14 @@
                 "title": "SkyKettle MAC Address",
                 "description": "Select your kettle.",
                 "data": {
-                    "mac": "MAC address of the kettle."
+                    "mac": "MAC address of the kettle"
                 }
             },
             "manual_mac": {
                 "title": "SkyKettle MAC Address",
                 "description": "Enter MAC address of your kettle.",
                 "data": {
-                    "mac": "MAC address of the kettle."
+                    "mac": "MAC address of the kettle"
                 }
             },
             "connect": {
