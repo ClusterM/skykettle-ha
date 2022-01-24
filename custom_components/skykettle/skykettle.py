@@ -153,7 +153,7 @@ class SkyKettle():
     async def get_colors(self, light_type):
         r = await self.command(SkyKettle.COMMAND_GET_COLORS, [light_type])
         colors_set = SkyKettle.ColorsSet(*unpack("BBBBBBBBBBBBBBBB", r))
-        _LOGGER.debug(f"Colors set: {colors_set}")
+        _LOGGER.debug(f"{colors_set}")
         return colors_set
 
     async def set_colors(self, colors_set):

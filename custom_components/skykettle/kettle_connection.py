@@ -19,11 +19,11 @@ class KettleConnection(SkyKettle):
     BLE_TIMEOUT = 1.5
     MAX_TRIES = 5
     TRIES_INTERVAL = 0.5
-    STATS_INTERVAL = 60
-    TARGET_TTL = 10
+    STATS_INTERVAL = 15
+    TARGET_TTL = 30
 
     def __init__(self, mac, key, persistent=True):
-        SkyKettle.__init__(self)
+        super().__init__()
         self._child = None
         self._mac = mac
         self._key = key
@@ -74,7 +74,7 @@ class KettleConnection(SkyKettle):
         if r[2] != command:
             raise IOError("Invalid response command")
         clean = bytes(r[3:-1])
-        _LOGGER.debug(f"Received (clean): {' '.join([f'{c:02x}' for c in clean])}")
+        _LOGGER.debug(f"Received: {' '.join([f'{c:02x}' for c in clean])}")
         return clean
 
     async def _connect(self):
@@ -163,11 +163,9 @@ class KettleConnection(SkyKettle):
 
                 if extra_action: await extra_action
 
+                # Is there scheduled boil_time?
                 self._status = await self.get_status()
                 boil_time = self._status.boil_time
-
-                if commit: await self.commit()
-
                 if self._target_boil_time != None and self._target_boil_time != boil_time:
                     try:
                         _LOGGER.debug(f"Need to update boil time from {boil_time} to {self._target_boil_time}")
@@ -184,6 +182,8 @@ class KettleConnection(SkyKettle):
                         _LOGGER.error(f"Can't update boil time ({type(ex).__name__}): {str(ex)}")
                     self._status = await self.get_status()
                 self._target_boil_time = None
+
+                if commit: await self.commit()
 
                 # If there is scheduled state
                 if self._target_state != None:
@@ -470,21 +470,21 @@ class KettleConnection(SkyKettle):
     def colors_lamp(self):
         return self._colors.get(SkyKettle.LIGHT_LAMP, None)
     
-    def get_color(self, color_type, n):
-        if color_type not in self._colors: return None
-        colors = self._colors[color_type]
+    def get_color(self, light_type, n):
+        if light_type not in self._colors: return None
+        colors = self._colors[light_type]
         if n == 0: return colors.r_low, colors.g_low, colors.b_low
         if n == 1: return colors.r_mid, colors.g_mid, colors.b_mid
         if n == 2: return colors.r_high, colors.g_high, colors.b_high
 
-    def get_brightness(self, color_type):
-        if color_type not in self._colors: return None
-        colors = self._colors[color_type]
+    def get_brightness(self, light_type):
+        if light_type not in self._colors: return None
+        colors = self._colors[light_type]
         return colors.brightness
     
-    def get_temperature(self, color_type, n):
-        if color_type not in self._colors: return None
-        colors = self._colors[color_type]
+    def get_temperature(self, light_type, n):
+        if light_type not in self._colors: return None
+        colors = self._colors[light_type]
         if n == 0: return colors.temp_low
         if n == 1: return colors.temp_mid
         if n == 2: return colors.temp_high
@@ -515,58 +515,84 @@ class KettleConnection(SkyKettle):
         return self._stats.user_on_count
 
     async def set_boil_time(self, value):
+        value = int(value)
         _LOGGER.info(f"Setting boil time to {value}")
         self._target_boil_time = value
         await self.update(commit=True)
         
     async def impulse_color(self, r, g, b, brightness):
-        await self.update(extra_action=SkyKettle.impulse_color(self, r, g, b, brightness))
+        await self.update(extra_action=super().impulse_color(r, g, b, brightness))
 
     async def set_sound(self, value):
-        if await self.update(force_stats=False, extra_action=SkyKettle.set_sound(self, value), commit=True):
+        if await self.update(force_stats=False, extra_action=super().set_sound(value), commit=True):
             _LOGGER.info(f"Sound is set to {value}")
         else:
             _LOGGER.error(f"Can't set sound to {value}")
 
     async def set_light_switch(self, light_type, value):
-        if await self.update(force_stats=True, extra_action=SkyKettle.set_light_switch(self, light_type, value), commit=True):
+        if await self.update(force_stats=True, extra_action=super().set_light_switch(light_type, value), commit=True):
             _LOGGER.info(f"Light 0x{light_type:02X} is set to {value}")
         else:
             _LOGGER.error(f"Can't set light 0x{light_type:02X} to {value}")
 
-    async def set_color(self, color_type, n, color):
-        if color_type not in self._colors: return
-        colors = self._colors[color_type]
+    async def set_color(self, light_type, n, color):
+        if light_type not in self._colors: return
+        self._last_get_stats = monotonic() # To avoid race condition
+        colors = self._colors[light_type]
         r, g, b = color
         if n == 0: colors = colors._replace(r_low=int(r), g_low=int(g), b_low=int(b))
         if n == 1: colors = colors._replace(r_mid=int(r), g_mid=int(g), b_mid=int(b))
         if n == 2: colors = colors._replace(r_high=int(r), g_high=int(g), b_high=int(b))
-        if await self.update(extra_action=self.set_colors(colors), commit=True):
-            self._colors[color_type] = colors
+        self._colors[light_type] = colors
+        if await self.update(extra_action=super().set_colors(colors), commit=True):
+            _LOGGER.info(f"Color 0x{light_type:02X}/{n} is set to {color}")
+        else:
+            _LOGGER.error(f"Can't set color 0x{light_type:02X}/{n} to {color}")
 
-    async def set_brightness(self, color_type, brightness):
-        if color_type not in self._colors: return
-        colors = self._colors[color_type]
+    async def set_brightness(self, light_type, brightness):
+        brightness = int(brightness)
+        if light_type not in self._colors: return
+        self._last_get_stats = monotonic() # To avoid race condition
+        colors = self._colors[light_type]
         colors = colors._replace(brightness=brightness, unknown1=brightness, unknown2=brightness)
-        if await self.update(extra_action=self.set_colors(colors), commit=True):
-            self._colors[color_type] = colors
+        self._colors[light_type] = colors
+        if await self.update(extra_action=super().set_colors(colors), commit=True):
+            _LOGGER.info(f"Color 0x{light_type:02X} brightness is set to {brightness}")
+        else:
+            _LOGGER.error(f"Can't set color 0x{light_type:02X} brightness to {brightness}")
 
-    async def set_temperature(self, color_type, n, temp):
-        if color_type not in self._colors: return        
-        colors = self._colors[color_type]
+    async def set_temperature(self, light_type, n, temp):
+        temp = int(temp)
+        if light_type not in self._colors: return        
+        self._last_get_stats = monotonic() # To avoid race condition
+        colors = self._colors[light_type]
         temp = int(temp)
         if n == 0: colors = colors._replace(temp_low=temp)
         if n == 1: colors = colors._replace(temp_mid=temp)
         if n == 2: colors = colors._replace(temp_high=temp)
-        if await self.update(extra_action=self.set_colors(colors), commit=True):
-            self._colors[color_type] = colors
+        self._colors[light_type] = colors
+        if await self.update(extra_action=super().set_colors(colors), commit=True):
+            _LOGGER.info(f"Color 0x{light_type:02X}/{n} temperature is set to {temp}")
+        else:
+            _LOGGER.error(f"Can't set color 0x{light_type:02X}/{n} temperature to {temp}")
 
     async def set_lamp_color_interval(self, secs):
-        await self.update(extra_action=SkyKettle.set_lamp_color_interval(self, secs), commit=True)
+        secs = int(secs)
+        self._last_get_stats = monotonic() # To avoid race condition
+        if self._status: self._status._replace(color_interval=secs)
+        if await self.update(extra_action=super().set_lamp_color_interval(secs), commit=True):
+            _LOGGER.info(f"Lamp color interval is set to {secs}")
+        else:
+            _LOGGER.error(f"Can't set lamp color interval to {secs}")
 
     async def set_lamp_auto_off_hours(self, hours):
-        if await self.update(extra_action=SkyKettle.set_lamp_auto_off_hours(self, hours), commit=True):
-            self._lamp_auto_off_hours = hours
+        hours = int(hours)
+        self._last_get_stats = monotonic() # To avoid race condition
+        self._lamp_auto_off_hours = hours
+        if await self.update(extra_action=super().set_lamp_auto_off_hours(hours)):
+            _LOGGER.info(f"Lamp auto off hours is set to {hours}")
+        else:
+            _LOGGER.error(f"Can't set lamp auto off hours to {hours}")
 
 
 class AuthError(Exception):
