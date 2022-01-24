@@ -2,7 +2,6 @@
 import logging
 import re
 import secrets
-import asyncio
 import traceback
 import voluptuous as vol
 from homeassistant.const import *
@@ -59,11 +58,12 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_scan(self, user_input=None):
         """Handle the scan step."""
 
+        errors = {}
         if user_input is not None:
             if user_input[CONF_MAC] == "...": return await self.async_step_manual_mac()
             spl = user_input[CONF_MAC].split(' ', maxsplit=2)
             mac = spl[0]
-            name = spl[1][1:-2]
+            name = spl[1][1:-2] if len(spl) >= 2 else None
             if not await self.init_mac(mac): return self.async_abort(reason='already_configured')
             if name: self.config[CONF_FRIENDLY_NAME] = name
             # Continue to options
@@ -76,6 +76,8 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if len(macs_filtered) > 0:
                 macs = macs_filtered
                 _LOGGER.debug(f"Filtered scan result: {scan}")
+            if len(macs) == 0:
+                errors["base"] = "no_scan"
             mac_list = [f"{r.mac} ({r.name})" for r in macs]
             mac_list = mac_list + ["..."] # Manual
             schema = vol.Schema(
@@ -93,6 +95,7 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason='unknown')
         return self.async_show_form(
             step_id="scan",
+            errors=errors,
             data_schema=schema
         )
 

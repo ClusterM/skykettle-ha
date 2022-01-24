@@ -9,6 +9,7 @@
             "unknown": "Unknown error, please check logs."
         },
         "error": {
+            "no_scan": "I can't find any BLE device for some reason, you can enter MAC address manually on the next step.",
             "invalid_mac": "MAC address must be in the form 'AA:BB:CC:DD:EE:FF'.",
             "cant_connect": "Can't connect to the kettle. Please make sure that it's on the stand, hatttool is granted with privileges (check instrucrions) and official application is not connected to the kettle.",
             "cant_auth": "Connected to the kettle but pairing failed. Please try again."
