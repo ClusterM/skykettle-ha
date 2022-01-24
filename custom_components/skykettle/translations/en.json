@@ -17,7 +17,7 @@
         "step": {
             "user": {
                 "title": "Automatic discovery of the kettle",
-                "description": "Make sure that the Kettle is on the stand, it's plugged into the outlet then proceed."
+                "description": "Make sure that the Kettle is on the stand and it's plugged into the outlet then proceed."
             },
             "scan": {
                 "title": "SkyKettle MAC Address",
