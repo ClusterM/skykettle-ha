@@ -71,11 +71,11 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             macs = await ble_scan(scan_time=BLE_SCAN_TIME)
-            _LOGGER.debug(f"Scan result: {scan}")
+            _LOGGER.debug(f"Scan result: {macs}")
             macs_filtered = [mac for mac in macs if mac.name and mac.name.startswith("RK-")]
             if len(macs_filtered) > 0:
                 macs = macs_filtered
-                _LOGGER.debug(f"Filtered scan result: {scan}")
+                _LOGGER.debug(f"Filtered scan result: {macs}")
             if len(macs) == 0:
                 errors["base"] = "no_scan"
             mac_list = [f"{r.mac} ({r.name})" for r in macs]
