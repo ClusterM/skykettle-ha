@@ -1,0 +1,6 @@
+{
+  "name": "SkyKettle",
+  "homeassistant": "2021.12.3",
+  "render_readme": true,
+  "country": ["RU"]
+}
