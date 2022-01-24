@@ -53,7 +53,7 @@ class SkyWaterHeater(WaterHeaterEntity):
 
     @property
     def device_class(self):
-        return DOMAIN
+        return None
 
     @property
     def device_info(self):
