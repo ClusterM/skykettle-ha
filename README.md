@@ -1,9 +1,11 @@
 # Redmond SkyKettle integration for Home Assistant
 This integration allows to control smart kettles from **Redmond SkyKettle** series.
 
-![image](https://user-images.githubusercontent.com/4236181/150850436-d8019861-9b2e-46ed-a462-69d3c92b9e6b.png)
+![image](https://user-images.githubusercontent.com/4236181/151023077-ca0055b4-1b1d-41a6-879c-6aabe3a30164.png)
 
-Features:
+![image](https://user-images.githubusercontent.com/4236181/151022885-1a93c4d5-b5fe-40f2-8d1f-ddb458ea2c09.png)
+
+## Features
 * Allows to set target temperature.
 * Allows to set any boil mode: heating (keep desired temperature), standard boiling, boiling+heating.
 * Allows to change many settings of the kettle directly from Home Assistant, even more settings than the official application allows.
@@ -11,6 +13,11 @@ Features:
 * Allows to use kettle as RGB lamp.
 * Automatic mode change if target temperature changed, allows easy control from Google Assistant, Yandex Alice, etc.
 * Persistent connection and fast reconnect.
+
+## Requirements
+
+* Linux-based server with Home Assistant.
+* Bluetooth adapter with BLE support.
 
 ## How to use
 
