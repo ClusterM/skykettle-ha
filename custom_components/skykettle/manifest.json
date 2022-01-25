@@ -7,6 +7,6 @@
   "codeowners": ["@clusterm"],
   "config_flow": true,
   "iot_class": "local_polling",
-  "documentation": "https://github.com/ClusterM/skykettle_ha/blob/master/README.md",
-  "issue_tracker": "https://github.com/ClusterM/skykettle_ha/issues"
+  "documentation": "https://github.com/ClusterM/skykettle-ha/blob/master/README.md",
+  "issue_tracker": "https://github.com/ClusterM/skykettle-ha/issues"
 }
