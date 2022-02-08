@@ -126,9 +126,9 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the connect step."""
         errors = {}
         kettle = KettleConnection(
-            self.config[CONF_MAC],
-            self.config[CONF_PASSWORD],
-            persistent=True          
+            mac=self.config[CONF_MAC],
+            key=self.config[CONF_PASSWORD],
+            persistent=True
         )
         tries = 3
         while tries > 0 and not kettle._last_connect_ok:

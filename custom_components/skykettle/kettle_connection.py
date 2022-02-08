@@ -22,11 +22,12 @@ class KettleConnection(SkyKettle):
     STATS_INTERVAL = 15
     TARGET_TTL = 30
 
-    def __init__(self, mac, key, persistent=True):
+    def __init__(self, mac, key, persistent=True, hass=None):
         super().__init__()
         self._child = None
         self._mac = mac
         self._key = key
+        self.hass = hass
         self.persistent = persistent
         self._connected = False
         self._auth_ok = False
@@ -47,6 +48,18 @@ class KettleConnection(SkyKettle):
         self._fresh_water = None
         self._colors = {}
         self._disposed = False
+
+    async def _sendline(self, data):
+        if self.hass == None:
+            self._child.sendline(data)
+        else:
+            await self.hass.async_add_job(self._child.sendline, data)
+
+    async def _sendcontrol(self, data):
+        if self.hass == None:
+            self._child.sendcontrol(data)
+        else:
+            await self.hass.async_add_job(self._child.sendcontrol, data)
 
     async def command(self, command, params=[]):
         if self._disposed:
@@ -86,11 +99,11 @@ class KettleConnection(SkyKettle):
             self._child = pexpect.spawn("gatttool", ['-I', '-t', 'random', '-b', self._mac], timeout=KettleConnection.BLE_TIMEOUT)
             await self._child.expect(r"\[LE\]> ", async_=True)
             _LOGGER.debug("Started gatttool")
-        self._child.sendline(f"connect")
+        await self._sendline(f"connect")
         await self._child.expect(r"Attempting to connect.*?\[LE\]> ", async_=True)
         _LOGGER.debug("Attempting to connect...")
         await self._child.expect(r"Connection successful.*?\[LE\]> ", async_=True)
-        self._child.sendline("char-write-cmd 0x000c 0100")
+        await self._sendline("char-write-cmd 0x000c 0100")
         await self._child.expect(r"\[LE\]> ", async_=True)
         _LOGGER.debug("Connected to the Kettle")
 
@@ -99,7 +112,7 @@ class KettleConnection(SkyKettle):
     async def _disconnect(self):
         try:
             if self._child and self._child.isalive():
-                self._child.sendline(f"disconnect")
+                await self._sendline(f"disconnect")
                 await self._child.expect(r"\[LE\]> ", async_=True)
                 if self._connected:
                     _LOGGER.debug("Disconnected")
@@ -111,7 +124,7 @@ class KettleConnection(SkyKettle):
         try:
             if self._child and self._child.isalive():
                 try:
-                    self._child.sendcontrol('d')
+                    await self._sendcontrol('d')
                     timeout = 1
                     while self._child.isalive():
                         await asyncio.sleep(0.025)
