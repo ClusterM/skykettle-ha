@@ -128,7 +128,8 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         kettle = KettleConnection(
             mac=self.config[CONF_MAC],
             key=self.config[CONF_PASSWORD],
-            persistent=True
+            persistent=True,
+            hass=self.hass
         )
         tries = 3
         while tries > 0 and not kettle._last_connect_ok:
