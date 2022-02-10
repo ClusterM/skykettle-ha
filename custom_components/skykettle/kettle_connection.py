@@ -53,13 +53,13 @@ class KettleConnection(SkyKettle):
         if self.hass == None:
             self._child.sendline(data)
         else:
-            await self.hass.async_add_job(self._child.sendline, data)
+            await self.hass.async_add_executor_job(self._child.sendline, data)
 
     async def _sendcontrol(self, data):
         if self.hass == None:
             self._child.sendcontrol(data)
         else:
-            await self.hass.async_add_job(self._child.sendcontrol, data)
+            await self.hass.async_add_executor_job(self._child.sendcontrol, data)
 
     async def command(self, command, params=[]):
         if self._disposed:
@@ -70,7 +70,7 @@ class KettleConnection(SkyKettle):
         _LOGGER.debug(f"Writing command {command:02x}, data: [{' '.join([f'{c:02x}' for c in params])}]")
         data = f"char-write-req 0x000e 55{self._iter:02x}{''.join([f'{c:02x}' for c in [command] + list(params)])}aa"
         #_LOGGER.debug(f"Writing {data}")
-        self._child.sendline(data)
+        await self._sendline(data)
         while True:
             r = await self._child.expect([
                     r"value:([ 0-9a-f]*)\r\n.*?\[LE\]> ",
@@ -339,7 +339,10 @@ class KettleConnection(SkyKettle):
         _LOGGER.info("Disposed.")
 
     def __del__(self):
-        self.stop()
+        if self.hass == None:
+            self.stop()
+        else:
+            self.hass.async_add_executor_job(self.stop)
 
     @property
     def available(self):
