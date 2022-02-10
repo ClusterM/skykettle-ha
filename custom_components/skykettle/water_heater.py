@@ -157,9 +157,9 @@ class SkyWaterHeater(WaterHeaterEntity):
         """Set new target temperatures."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.kettle.set_target_temp(target_temperature)
-        async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
+        await self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
 
     async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         await self.kettle.set_target_mode(operation_mode)
-        async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
+        await self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)

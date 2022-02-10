@@ -135,7 +135,7 @@ class SkySwitch(SwitchEntity):
             await self.kettle.set_light_switch(SkyKettle.LIGHT_SYNC, True)
         if self.switch_type == SWITCH_LIGHT_BOIL:
             await self.kettle.set_light_switch(SkyKettle.LIGHT_BOIL, True)
-        async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
+        await self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
@@ -147,4 +147,4 @@ class SkySwitch(SwitchEntity):
             await self.kettle.set_light_switch(SkyKettle.LIGHT_SYNC, False)
         if self.switch_type == SWITCH_LIGHT_BOIL:
             await self.kettle.set_light_switch(SkyKettle.LIGHT_BOIL, False)
-        async_dispatcher_send(self.hass, DISPATCHER_UPDATE)
+        await self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
