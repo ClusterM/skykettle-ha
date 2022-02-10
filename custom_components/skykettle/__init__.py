@@ -40,20 +40,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await kettle.update()
         await hass.async_add_executor_job(async_dispatcher_send, hass, DISPATCHER_UPDATE)
         if hass.data[DOMAIN][DATA_WORKING]:
-            await hass.async_add_executor_job(schedule_poll)
+            await hass.async_add_executor_job(schedule_poll, timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]))
 
-    def schedule_poll():
-        hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(hass, timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]), poll)
+    def schedule_poll(td):
+        hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(hass, td, poll)
 
     hass.data[DOMAIN][DATA_WORKING] = True
-    hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(
-        hass, timedelta(seconds=1), poll)
     hass.data[DOMAIN][DATA_DEVICE_INFO] = lambda: device_info(entry)
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    hass.async_add_executor_job(schedule_poll, timedelta(seconds=3))
 
     return True
 
