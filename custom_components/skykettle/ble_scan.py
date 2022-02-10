@@ -27,11 +27,7 @@ async def ble_scan(scan_time=3):
     stdout, stderr = scan_thread.result
     out_lines = stdout.decode('utf-8').split('\n')
     err = stderr.decode('utf-8')
-    if err:
-        if "Operation not permitted" in err:
-            raise PermissionError(err)
-        else:
-            raise Exception(err)
+
     res = []
     for l in out_lines:
         cols = l.split(maxsplit=2)
@@ -41,5 +37,11 @@ async def ble_scan(scan_time=3):
             if name == "(unknown)": name = None
             if len([l for l in res if l.mac == mac]) == 0:
                 res.append(BleDevice(mac, name))
+
+    if err and not res:
+        if "Operation not permitted" in err:
+            raise PermissionError(err)
+        else:
+            raise Exception(err)
 
     return res
