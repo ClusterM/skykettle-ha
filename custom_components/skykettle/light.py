@@ -184,7 +184,7 @@ class KettleLight(LightEntity):
                 await self.kettle.set_color(self.light_type, self.n, kwargs[ATTR_RGB_COLOR])
             if ATTR_BRIGHTNESS in kwargs:
                 await self.kettle.set_brightness(self.light_type, kwargs[ATTR_BRIGHTNESS])
-        await self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
+        self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
@@ -192,4 +192,4 @@ class KettleLight(LightEntity):
         if self.light_type == LIGHT_GAME:
             await self.kettle.set_target_mode(STATE_OFF)
             self.on = False
-        await self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
+        self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)

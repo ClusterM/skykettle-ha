@@ -221,4 +221,4 @@ class SkyNumber(NumberEntity):
             await self.kettle.set_lamp_color_interval(value)
         if self.number_type == NUMBER_LAMP_AUTO_OFF_HOURS:
             await self.kettle.set_lamp_auto_off_hours(value)
-        await self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
+        self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
