@@ -1,6 +1,8 @@
 # Redmond SkyKettle integration for Home Assistant
 This integration allows to control smart kettles from **Redmond SkyKettle** series.
 
+![image](https://user-images.githubusercontent.com/4236181/153447814-b2b3846d-e925-477f-ad7b-1f5639f7609a.png)
+
 ![image](https://user-images.githubusercontent.com/4236181/151023077-ca0055b4-1b1d-41a6-879c-6aabe3a30164.png)
 
 ![image](https://user-images.githubusercontent.com/4236181/151022885-1a93c4d5-b5fe-40f2-8d1f-ddb458ea2c09.png)
