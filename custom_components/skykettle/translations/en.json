@@ -3,8 +3,10 @@
     "config": {
         "abort": {
             "already_configured": "Integration for this kettle is already configured.",
+            "linux_not_found": "Sorry, Linux-based system required.",
             "hcitool_not_found": "hcitool binary not found.",
             "hatttool_not_found": "hatttool binary not found.",
+            "timeout_not_found": "\"timeout\" binary not found.",
             "permission_error": "Permission error, make sure that hcitool and hatttool are granted with privileges (check instructions).",
             "unknown": "Unknown error, please check logs."
         },

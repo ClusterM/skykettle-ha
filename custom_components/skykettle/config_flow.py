@@ -3,6 +3,8 @@ import logging
 import re
 import secrets
 import traceback
+import sys
+import subprocess
 import voluptuous as vol
 from homeassistant.const import *
 import homeassistant.helpers.config_validation as cv
@@ -50,6 +52,28 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return await self.async_step_scan()
+
+        # Check OS
+        if sys.platform != "linux":
+            return self.async_abort(reason='linux_not_found')
+
+        # Test binaries
+        try:
+            subprocess.Popen(["timeout"], shell=False).kill()
+        except FileNotFoundError:
+            _LOGGER.error(traceback.format_exc())
+            return self.async_abort(reason='timeout_not_found')
+        try:
+            subprocess.Popen(["gatttool"], shell=False).kill()
+        except FileNotFoundError:
+            _LOGGER.error(traceback.format_exc())
+            return self.async_abort(reason='gatttool_not_found')
+        try:
+            subprocess.Popen(["hcitool"], shell=False).kill()
+        except FileNotFoundError:
+            _LOGGER.error(traceback.format_exc())
+            return self.async_abort(reason='hcitool_not_found')
+        
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({})
