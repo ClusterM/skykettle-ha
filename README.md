@@ -18,6 +18,9 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 
 * Linux-based server with Home Assistant.
 * Bluetooth adapter with BLE support.
+* [timeout](https://command-not-found.com/timeout) utility.
+* [hcitool](https://command-not-found.com/hcitool) utility.
+* [gatttool](https://command-not-found.com/gatttool) utility.
 
 ## How to use
 
@@ -27,8 +30,15 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
 sudo setcap 'cap_net_raw,cap_net_admin+eip' `which gatttool`
 ```
-* Add **SkyKettle** integration just like any other integration.
+* Add **SkyKettle** integration just like any other integration (press Shift+F5 if it's not listed).
 * Make sure that the Kettle is on the stand and it's plugged into the outlet.
 * Select MAC address of your kettle from the list.
 * Tune rest of the settings if you want.
 * Enjoy.
+
+## Donations
+
+* PayPal: [clusterrr@clusterrr.com](https://www.paypal.me/clusterm)
+* YooMoney: [41001843680639](https://yoomoney.ru/transfer/quickpay?requestId=343838343938323238305f64633138343335353537313930333165656235636336346136363334373439303432636264356532)
+* Bitcoin: [1GS4XXx1FjQaFjgHnoPPVAzw9xqfv5Spx5](https://btc.clusterrr.com/)
+* DonationAlerts: [https://www.donationalerts.com/r/clustermeerkat](https://www.donationalerts.com/r/clustermeerkat)
