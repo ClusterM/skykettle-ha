@@ -36,6 +36,76 @@ sudo setcap 'cap_net_raw,cap_net_admin+eip' `which gatttool`
 * Tune rest of the settings if you want.
 * Enjoy.
 
+## Hints
+
+You can use the [card_mod](https://github.com/thomasloven/lovelace-card-mod) integration to make the color of the card icon depend on the temperature of the kettle.
+
+Example:
+
+```
+type: vertical-stack
+cards:
+  - type: button
+    tap_action:
+      action: more-info
+    entity: water_heater.skykettle_rk_g211
+    show_state: true
+    name: Чайник
+    hold_action:
+      action: toggle
+    card_mod:
+      style: >
+        {% set temp = state_attr("water_heater.skykettle_rk_g211",
+        "current_temperature") %}
+
+        :host {
+          --card-mod-icon:
+          {% if temp != None and temp > 95 %}
+          mdi:kettle-steam;
+          {% else %}
+          mdi:kettle;
+          {% endif %}
+          --card-mod-icon-color:
+          {% if temp != None -%}
+          hsl(
+            {{ 235 + (0 - 235) / (95 - 25) * (temp - 25) }},
+            {{ 60 + (100 - 60) / (100 - 25) * (temp - 25) }}%,
+            50%
+          )
+          {%- else -%}
+          black
+          {%- endif %};
+        }
+  - type: entities
+    entities:
+      - entity: water_heater.skykettle_rk_g211
+        card_mod:
+          style: >
+            {% set temp = state_attr("water_heater.skykettle_rk_g211",
+            "current_temperature") %}
+
+            :host {
+              --card-mod-icon:
+              {% if temp != None and temp > 95 %}
+              mdi:kettle-steam;
+              {% else %}
+              mdi:kettle;
+              {% endif %}
+              --card-mod-icon-color:
+              {% if temp != None -%}
+              hsl(
+                {{ 235 + (0 - 235) / (95 - 25) * (temp - 25) }},
+                {{ 60 + (100 - 60) / (100 - 25) * (temp - 25) }}%,
+                50%
+              )
+              {%- else -%}
+              black
+              {%- endif %};
+            }
+```
+
+![image](https://user-images.githubusercontent.com/4236181/153446401-45c2f09e-2637-4fd1-8dec-0c365a3babb5.png)
+
 ## Donations
 
 * PayPal: [clusterrr@clusterrr.com](https://www.paypal.me/clusterm)
