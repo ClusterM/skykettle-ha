@@ -130,7 +130,10 @@ class KettleConnection(SkyKettle):
                         await asyncio.sleep(0.025)
                         timeout = timeout - 0.25
                         if timeout <= 0:
-                            self._child.terminate(force=True)
+                            if self.hass == None:
+                                self._child.terminate(force=True)
+                            else:
+                                await self.hass.async_add_executor_job(self._child.terminate, force=True)
                             break
                     _LOGGER.debug("Terminated")
                 except Exception as ex:
@@ -326,13 +329,19 @@ class KettleConnection(SkyKettle):
         if self._disposed: return
         self._disposed = True
         if self._child and self._child.isalive():
-            self._child.sendcontrol('d')
+            if self.hass == None:
+                self._child.sendcontrol('d')
+            else:
+                self.hass.async_add_executor_job(self._child.sendcontrol, 'd')
             timeout = 1
             while self._child.isalive():
                 sleep(0.025)
                 timeout = timeout - 0.25
                 if timeout <= 0:
-                    self._child.terminate(force=True)
+                    if self.hass == None:
+                        self._child.terminate(force=True)
+                    else:
+                        self.hass.async_add_executor_job(self._child.terminate, force=True)
                     break
             self._child = None
         self._connected = False
