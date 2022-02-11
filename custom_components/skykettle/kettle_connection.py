@@ -166,7 +166,7 @@ class KettleConnection(SkyKettle):
             self._sw_version = await self.get_version()
 
     async def _disconnect_if_need(self):
-        if not self.persistent:
+        if not self.persistent and self.target_mode != SkyKettle.MODE_GAME:
             await self.disconnect()
 
     async def update(self, tries=MAX_TRIES, force_stats=False, extra_action=None, commit=False):
