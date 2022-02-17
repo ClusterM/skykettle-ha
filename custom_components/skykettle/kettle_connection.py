@@ -131,9 +131,9 @@ class KettleConnection(SkyKettle):
                         timeout = timeout - 0.25
                         if timeout <= 0:
                             if self.hass == None:
-                                self._child.terminate(force=True)
+                                self._child.terminate()
                             else:
-                                await self.hass.async_add_executor_job(self._child.terminate, force=True)
+                                await self.hass.async_add_executor_job(self._child.terminate)
                             break
                     _LOGGER.debug("Terminated")
                 except Exception as ex:
@@ -339,9 +339,9 @@ class KettleConnection(SkyKettle):
                 timeout = timeout - 0.25
                 if timeout <= 0:
                     if self.hass == None:
-                        self._child.terminate(force=True)
+                        self._child.terminate()
                     else:
-                        self.hass.async_add_executor_job(self._child.terminate, force=True)
+                        self.hass.async_add_executor_job(self._child.terminate)
                     break
             self._child = None
         self._connected = False
