@@ -95,7 +95,7 @@ class KettleConnection(SkyKettle):
             raise DisposedError()
         if self._connected and self._child and self._child.isalive(): return
         if not self._child or not self._child.isalive():
-            _LOGGER.debug("Staring gatttool...")
+            _LOGGER.debug("Starting gatttool...")
             self._child = pexpect.spawn("gatttool", ['-I', '-t', 'random', '-b', self._mac], timeout=KettleConnection.BLE_TIMEOUT)
             await self._child.expect(r"\[LE\]> ", async_=True)
             _LOGGER.debug("Started gatttool")
