@@ -81,7 +81,7 @@ class SkyKettle():
 
     async def auth(self, key):
         r = await self.command(SkyKettle.COMMAND_AUTH, key)
-        ok = r[0] == 1
+        ok = r[0] != 0
         _LOGGER.debug(f"Auth: ok={ok}")
         return ok
 
