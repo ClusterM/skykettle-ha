@@ -40,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await kettle.update()
         await hass.async_add_executor_job(async_dispatcher_send, hass, DISPATCHER_UPDATE)
         if hass.data[DOMAIN][DATA_WORKING]:
-            hass.async_add_executor_job(schedule_poll, timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]))
+            schedule_poll(timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]))
+        else:
+            _LOGGER.int("Not working anymore, stop")
 
     def schedule_poll(td):
         hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(hass, td, poll)
@@ -53,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    hass.async_add_executor_job(schedule_poll, timedelta(seconds=3))
+    schedule_poll(timedelta(seconds=3))
 
     return True
 
@@ -73,6 +75,7 @@ def device_info(entry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    _LOGGER.debug("Unloading")
     hass.data[DOMAIN][DATA_WORKING] = False
     for component in PLATFORMS:
         hass.async_create_task(
@@ -82,9 +85,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].stop)
     del hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION]
     hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION] = None
+    _LOGGER.debug("Entry unloaded")
     return True
 
 async def entry_update_listener(hass, entry):
     """Handle options update."""
     kettle = hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION]
     kettle.persistent = entry.data.get(CONF_PERSISTENT_CONNECTION)
+    _LOGGER.debug("Options updated")
