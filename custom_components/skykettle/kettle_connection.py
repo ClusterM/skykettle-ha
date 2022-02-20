@@ -347,12 +347,6 @@ class KettleConnection(SkyKettle):
         self._connected = False
         _LOGGER.info("Disposed.")
 
-    def __del__(self):
-        if self.hass == None:
-            self.stop()
-        else:
-            self.hass.async_add_executor_job(self.stop)
-
     @property
     def available(self):
         return self._last_connect_ok and self._last_auth_ok

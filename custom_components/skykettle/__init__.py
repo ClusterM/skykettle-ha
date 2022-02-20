@@ -83,7 +83,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     hass.data[DOMAIN][DATA_CANCEL]()
     await hass.async_add_executor_job(hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].stop)
-    del hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION]
     hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION] = None
     _LOGGER.debug("Entry unloaded")
     return True
