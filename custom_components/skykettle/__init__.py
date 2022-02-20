@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if hass.data[DOMAIN][DATA_WORKING]:
             schedule_poll(timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]))
         else:
-            _LOGGER.int("Not working anymore, stop")
+            _LOGGER.info("Not working anymore, stop")
 
     def schedule_poll(td):
         hass.data[DOMAIN][DATA_CANCEL] = ev.async_call_later(hass, td, poll)
