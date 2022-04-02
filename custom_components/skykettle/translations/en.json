@@ -17,19 +17,22 @@
             "cant_auth": "Connected to the kettle but pairing failed. Please try again."
         },
         "step": {
-            "user": {
+            "select_adapter" {
+                "title": "Select Bluetooth Adapter"
+            },
+            "scan_message": {
                 "title": "Automatic discovery of the kettle",
                 "description": "Make sure that the Kettle is on the stand and it's plugged into the outlet then proceed."
             },
             "scan": {
-                "title": "SkyKettle MAC Address",
+                "title": "MAC Address",
                 "description": "Select your kettle.",
                 "data": {
                     "mac": "MAC address of the kettle"
                 }
             },
             "manual_mac": {
-                "title": "SkyKettle MAC Address",
+                "title": "MAC Address",
                 "description": "Enter MAC address of your kettle.",
                 "data": {
                     "mac": "MAC address of the kettle"

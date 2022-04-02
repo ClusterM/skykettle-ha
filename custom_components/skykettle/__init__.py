@@ -32,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         mac=entry.data[CONF_MAC],
         key=entry.data[CONF_PASSWORD],
         persistent=entry.data[CONF_PERSISTENT_CONNECTION],
+        adapter=entry.data.get(CONF_DEVICE, None),
         hass=hass
     )
     hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION] = kettle

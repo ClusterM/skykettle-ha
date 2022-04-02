@@ -17,22 +17,25 @@
             "cant_auth": "Подключились к чайнику, но сопряжение не удалось. Попробуйте снова."
         },
         "step": {
-            "user": {
+            "select_adapter" {
+                "title": "Выберите bluetooth адаптер"
+            },
+            "scan_message": {
                 "title": "Автоматическое обнаружение чайника",
                 "description": "Пожалуйста, убедитесь, что чайник стоит на подставке и включен в розетку."
             },
             "scan": {
-                "title": "SkyKettle MAC-адрес",
+                "title": "MAC адрес",
                 "description": "Выберите ваш чайник.",
                 "data": {
-                    "mac": "MAC-адрес чайника"
+                    "mac": "MAC адрес чайника"
                 }
             },
             "manual_mac": {
-                "title": "SkyKettle MAC-адрес",
+                "title": "MAC адрес",
                 "description": "Введите MAC-адрес вашего чайника.",
                 "data": {
-                    "mac": "MAC-адрес чайника"
+                    "mac": "MAC адрес чайника"
                 }
             },
             "connect": {

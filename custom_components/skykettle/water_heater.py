@@ -113,7 +113,7 @@ class SkyWaterHeater(WaterHeaterEntity):
             "success_rate": self.kettle.success_rate,
             "persistent_connection": self.kettle.persistent,
             "poll_interval": self.entry.data.get(CONF_SCAN_INTERVAL, 0),
-            "ontime_seconds": self.kettle.ontime.total_seconds(),
+            "ontime_seconds": self.kettle.ontime.total_seconds() if self.kettle.ontime else None,
             "ontime_string": str(self.kettle.ontime),
             "energy_wh": self.kettle.energy_wh,
             "heater_on_count": self.kettle.heater_on_count,

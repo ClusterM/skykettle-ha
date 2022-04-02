@@ -1,30 +1,23 @@
 import subprocess
 import asyncio
+import shlex
 import re
-from threading import Thread
 from collections import namedtuple
 
 REGEX_MAC = r"^(([0-9a-fA-F]){2}[:-]?){5}[0-9a-fA-F]{2}$"
 
 BleDevice = namedtuple("BleDevice", ["mac", "name"])
+BleAdapter = namedtuple("BleAdapter", ["name", "mac"])
 
 
-class ScanThread(Thread):
-    def __init__(self, scan_time, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.scan_time = int(scan_time)
-        self.result = None
-
-    def run(self):
-        proc = subprocess.Popen(["timeout", "-s", "INT", f"{self.scan_time}s", "hcitool", "lescan"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
-        self.result = proc.communicate()
-
-
-async def ble_scan(scan_time=3):
-    scan_thread = ScanThread(scan_time=scan_time, daemon=True)
-    scan_thread.start()
-    while not scan_thread.result: await asyncio.sleep(0.1)
-    stdout, stderr = scan_thread.result
+async def ble_scan(device, scan_time=3):
+    devopt = ""
+    if device: devopt = f"-i {shlex.quote(device)}"
+    proc = await asyncio.create_subprocess_shell(
+        f"timeout -s INT {int(scan_time)}s hcitool {devopt} lescan",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
     out_lines = stdout.decode('utf-8').split('\n')
     err = stderr.decode('utf-8')
 
@@ -45,3 +38,20 @@ async def ble_scan(scan_time=3):
             raise Exception(err)
 
     return res
+
+async def ble_get_adapters():
+    proc = await asyncio.create_subprocess_shell(
+        "hcitool dev",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
+    out_lines = stdout.decode('utf-8').split('\n')
+    err = stderr.decode('utf-8')
+    if err: raise Exception(err)
+
+    devices = []
+    for line in out_lines:
+        cols = line.split()
+        if len(cols) >= 2 and re.match(REGEX_MAC, cols[1]):
+            devices.append(BleAdapter(cols[0], cols[1]))
+    return devices

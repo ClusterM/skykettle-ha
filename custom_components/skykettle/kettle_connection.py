@@ -22,13 +22,14 @@ class KettleConnection(SkyKettle):
     STATS_INTERVAL = 15
     TARGET_TTL = 30
 
-    def __init__(self, mac, key, persistent=True, hass=None):
+    def __init__(self, mac, key, persistent=True, adapter=None, hass=None):
         super().__init__()
         self._child = None
         self._mac = mac
         self._key = key
-        self.hass = hass
         self.persistent = persistent
+        self.adapter = adapter
+        self.hass = hass
         self._connected = False
         self._auth_ok = False
         self._iter = 0
@@ -96,7 +97,7 @@ class KettleConnection(SkyKettle):
         if self._connected and self._child and self._child.isalive(): return
         if not self._child or not self._child.isalive():
             _LOGGER.debug("Starting \"gatttool\"...")
-            self._child = await self.hass.async_add_executor_job(pexpect.spawn, "gatttool", ['-I', '-t', 'random', '-b', self._mac], KettleConnection.BLE_TIMEOUT)
+            self._child = await self.hass.async_add_executor_job(pexpect.spawn, "gatttool", (['-i', self.adapter] if self.adapter else []) + ['-I', '-t', 'random', '-b', self._mac], KettleConnection.BLE_TIMEOUT)
             await self._child.expect(r"\[LE\]> ", async_=True)
             _LOGGER.debug("\"gatttool\" started")
         await self._sendline(f"connect")

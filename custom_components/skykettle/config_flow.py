@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from .const import *
 from .ble_scan import ble_scan
+from .ble_scan import ble_get_adapters
 from .kettle_connection import KettleConnection
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +33,6 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a new SkyKettleConfigFlow."""
         self.entry = entry
         self.config = {} if not entry else dict(entry.data.items())
-        # _LOGGER.debug(f"initial config: {self.config}")
 
     async def init_mac(self, mac):
         mac = mac.upper()
@@ -49,14 +49,9 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the user step."""
-
-        if user_input is not None:
-            return await self.async_step_scan()
-
         # Check OS
         if sys.platform != "linux":
             return self.async_abort(reason='linux_not_found')
-
         # Test binaries
         try:
             subprocess.Popen(["timeout"], shell=False).kill()
@@ -73,19 +68,52 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except FileNotFoundError:
             _LOGGER.error(traceback.format_exc())
             return self.async_abort(reason='hcitool_not_found')
-        
+        return await self.async_step_select_adapter()
+
+    async def async_step_select_adapter(self, user_input=None):
+        """Handle the select_adapter step."""
+        errors = {}
+        if user_input is not None:
+            spl = user_input[CONF_DEVICE].split(' ', maxsplit=1)
+            name = None
+            if spl[0] != "auto": name = spl[0]
+            self.config[CONF_DEVICE] = name
+            # Continue to scan
+            return await self.async_step_scan_message()
+
+        try:
+            adapters = await ble_get_adapters()
+            _LOGGER.debug(f"Adapters: {adapters}")
+            adapters_list = [f"{r.name} ({r.mac})" for r in adapters]
+            adapters_list = ["auto"] + adapters_list # Auto
+            schema = vol.Schema(
+            {
+                vol.Required(CONF_DEVICE): vol.In(adapters_list)
+            })
+        except Exception:
+            _LOGGER.error(traceback.format_exc())
+            return self.async_abort(reason='unknown')
         return self.async_show_form(
-            step_id="user",
+            step_id="select_adapter",
+            errors=errors,
+            data_schema=schema
+        )
+    
+    async def async_step_scan_message(self, user_input=None):
+        """Handle the scan_message step."""
+        if user_input is not None:
+            return await self.async_step_scan()
+        return self.async_show_form(
+            step_id="scan_message",
             data_schema=vol.Schema({})
         )
 
     async def async_step_scan(self, user_input=None):
         """Handle the scan step."""
-
         errors = {}
         if user_input is not None:
             if user_input[CONF_MAC] == "...": return await self.async_step_manual_mac()
-            spl = user_input[CONF_MAC].split(' ', maxsplit=2)
+            spl = user_input[CONF_MAC].split(' ', maxsplit=1)
             mac = spl[0]
             name = spl[1][1:-2] if len(spl) >= 2 else None
             if not await self.init_mac(mac): return self.async_abort(reason='already_configured')
@@ -94,7 +122,7 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_connect()
 
         try:
-            macs = await ble_scan(scan_time=BLE_SCAN_TIME)
+            macs = await ble_scan(self.config.get(CONF_DEVICE, None), scan_time=BLE_SCAN_TIME)
             _LOGGER.debug(f"Scan result: {macs}")
             macs_filtered = [mac for mac in macs if mac.name and mac.name.startswith("RK-")]
             if len(macs_filtered) > 0:
@@ -149,26 +177,29 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_connect(self, user_input=None):
         """Handle the connect step."""
         errors = {}
-        kettle = KettleConnection(
-            mac=self.config[CONF_MAC],
-            key=self.config[CONF_PASSWORD],
-            persistent=True,
-            hass=self.hass
-        )
-        tries = 3
-        while tries > 0 and not kettle._last_connect_ok:
-            await kettle.update()
-            tries = tries - 1
+        if user_input is not None:
+            kettle = KettleConnection(
+                mac=self.config[CONF_MAC],
+                key=self.config[CONF_PASSWORD],
+                persistent=True,
+                adapter=self.config.get(CONF_DEVICE, None),
+                hass=self.hass
+            )
+            tries = 3
+            while tries > 0 and not kettle._last_connect_ok:
+                await kettle.update()
+                tries = tries - 1
             
-        connect_ok = kettle._last_connect_ok
-        auth_ok = kettle._last_auth_ok
+            connect_ok = kettle._last_connect_ok
+            auth_ok = kettle._last_auth_ok
+            kettle.stop()
         
-        if not connect_ok:
-            errors["base"] = "cant_connect"
-        elif auth_ok:
-            return await self.async_step_init()
-        elif user_input != None:
-            errors["base"] = "cant_auth"
+            if not connect_ok:
+                errors["base"] = "cant_connect"
+            elif not auth_ok:
+                errors["base"] = "cant_auth"
+            else:
+                return await self.async_step_init()
 
         return self.async_show_form(
             step_id="connect",
