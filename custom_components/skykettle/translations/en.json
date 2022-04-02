@@ -17,7 +17,7 @@
             "cant_auth": "Connected to the kettle but pairing failed. Please try again."
         },
         "step": {
-            "select_adapter" {
+            "select_adapter": {
                 "title": "Select Bluetooth Adapter"
             },
             "scan_message": {

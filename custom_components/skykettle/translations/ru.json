@@ -17,7 +17,7 @@
             "cant_auth": "Подключились к чайнику, но сопряжение не удалось. Попробуйте снова."
         },
         "step": {
-            "select_adapter" {
+            "select_adapter": {
                 "title": "Выберите bluetooth адаптер"
             },
             "scan_message": {
