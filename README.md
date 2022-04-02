@@ -106,7 +106,7 @@ sequence:
       entity_id: water_heater.skykettle_rk_g211
 ```
 
-### Turn the kettle into a lamp:
+### Turn the kettle into a lamp
 ```YAML
 sequence:
   - service: light.turn_on
