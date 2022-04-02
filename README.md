@@ -38,6 +38,88 @@ sudo setcap 'cap_net_raw,cap_net_admin+eip' `which gatttool`
 * Tune rest of the settings if you want.
 * Enjoy.
 
+## Scripts
+### To boil and turn off after boiling
+```YAML
+sequence:
+  - service: water_heater.set_operation_mode
+    data:
+      operation_mode: Boil
+    target:
+      entity_id: water_heater.skykettle_rk_g211
+```
+
+Also you can use `water_heater.turn_on` service **when the kettle is off/idle**:
+```YAML
+sequence:
+  - service: water_heater.turn_on
+    data: {}
+    target:
+      entity_id: water_heater.skykettle_rk_g211
+```
+
+### To boil and keep desired temperature
+```YAML
+sequence:
+  - service: water_heater.set_operation_mode
+    data:
+      operation_mode: Boil+Heat
+    target:
+      entity_id: water_heater.skykettle_rk_g211
+  - service: water_heater.set_temperature
+    data:
+      temperature: 90
+    target:
+      entity_id: water_heater.skykettle_rk_g211
+```
+
+### To warm up and keep desired temperature without boiling
+```YAML
+sequence:
+  - service: water_heater.set_operation_mode
+    data:
+      operation_mode: Heat
+    target:
+      entity_id: water_heater.skykettle_rk_g211
+  - service: water_heater.set_temperature
+    data:
+      temperature: 90
+    target:
+      entity_id: water_heater.skykettle_rk_g211
+```
+
+### Turn the kettle off
+```YAML
+sequence:
+  - service: water_heater.set_operation_mode
+    data:
+      operation_mode: off
+    target:
+      entity_id: water_heater.skykettle_rk_g211
+```
+Also you can use `water_heater.turn_off` service:
+```YAML
+sequence:
+  - service: water_heater.turn_off
+    data: {}
+    target:
+      entity_id: water_heater.skykettle_rk_g211
+```
+
+### Turn the kettle into a lamp:
+```YAML
+sequence:
+  - service: light.turn_on
+    data:
+      rgb_color:
+        - 255
+        - 100
+        - 255
+      brightness: 255
+    target:
+      entity_id: light.skykettle_rk_g211_light
+```
+
 ## Hints
 
 You can use the [card_mod](https://github.com/thomasloven/lovelace-card-mod) integration to make the color of the card icon depend on the temperature of the kettle.
