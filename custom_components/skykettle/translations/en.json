@@ -18,7 +18,8 @@
         },
         "step": {
             "select_adapter": {
-                "title": "Select Bluetooth Adapter"
+                "title": "Bluetooth Adapter",
+                "description": "Select the Bluetooth adapter which will be used to connect to the kettle."
             },
             "scan_message": {
                 "title": "Automatic discovery of the kettle",

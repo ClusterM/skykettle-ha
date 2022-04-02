@@ -18,7 +18,8 @@
         },
         "step": {
             "select_adapter": {
-                "title": "Выберите bluetooth адаптер"
+                "title": "Bluetooth адаптер",
+                "description": "Выберите Bluetooth адаптер, который будет использоваться для подключения к чайнику."
             },
             "scan_message": {
                 "title": "Автоматическое обнаружение чайника",
