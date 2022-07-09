@@ -32,6 +32,7 @@ class KettleConnection(SkyKettle):
         self.hass = hass
         self._connected = False
         self._auth_ok = False
+        self._sw_version = None
         self._iter = 0
         self._update_lock = asyncio.Lock()
         self._last_set_target = 0
