@@ -70,7 +70,7 @@ class SkyNumber(NumberEntity):
         if self.number_type == NUMBER_COLOR_INTERVAL:
             return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " lamp color change interval"
         if self.number_type == NUMBER_LAMP_AUTO_OFF_HOURS:
-            return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " lamp auto off hours"
+            return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " lamp auto off time"
 
     @property
     def icon(self):
@@ -89,7 +89,9 @@ class SkyNumber(NumberEntity):
 
     @property
     def device_class(self):
-        return None # No classes
+        if self.number_type in [NUMBER_TEMPERATURE_LOW, NUMBER_TEMPERATURE_MID, NUMBER_TEMPERATURE_HIGH]:
+            return "temperature"
+        return None
 
     @property
     def device_info(self):
@@ -134,7 +136,22 @@ class SkyNumber(NumberEntity):
             return EntityCategory.CONFIG
 
     @property
-    def value(self):
+    def native_unit_of_measurement(self):
+        if self.number_type == NUMBER_TYPE_BOIL_TIME:
+            return None
+        if self.number_type == NUMBER_TEMPERATURE_LOW:
+            return "°C"
+        if self.number_type == NUMBER_TEMPERATURE_MID:
+            return "°C"
+        if self.number_type == NUMBER_TEMPERATURE_HIGH:
+            return "°C"
+        if self.number_type == NUMBER_COLOR_INTERVAL:
+            return "secs"
+        if self.number_type == NUMBER_LAMP_AUTO_OFF_HOURS:
+            return "h"
+
+    @property
+    def native_value(self):
         if self.number_type == NUMBER_TYPE_BOIL_TIME:
             return self.kettle.boil_time
         if self.number_type == NUMBER_TEMPERATURE_LOW:
@@ -149,7 +166,7 @@ class SkyNumber(NumberEntity):
             return self.kettle.lamp_auto_off_hours
 
     @property
-    def min_value(self):
+    def native_min_value(self):
         if self.number_type == NUMBER_TYPE_BOIL_TIME:
             return -5
         if self.number_type == NUMBER_TEMPERATURE_LOW:
@@ -164,7 +181,7 @@ class SkyNumber(NumberEntity):
             return 1
 
     @property
-    def max_value(self):
+    def native_max_value(self):
         if self.number_type == NUMBER_TYPE_BOIL_TIME:
             return 5
         if self.number_type == NUMBER_TEMPERATURE_LOW:
@@ -179,7 +196,7 @@ class SkyNumber(NumberEntity):
             return 24
 
     @property
-    def step(self):
+    def native_step(self):
         if self.number_type == NUMBER_TYPE_BOIL_TIME:
             return 1
         if self.number_type == NUMBER_TEMPERATURE_LOW:
@@ -208,7 +225,7 @@ class SkyNumber(NumberEntity):
         if self.number_type == NUMBER_LAMP_AUTO_OFF_HOURS:
             return NumberMode.BOX
 
-    async def async_set_value(self, value):
+    async def async_set_native_value(self, value):
         if self.number_type == NUMBER_TYPE_BOIL_TIME:
             await self.kettle.set_boil_time(value)
         if self.number_type == NUMBER_TEMPERATURE_LOW:
