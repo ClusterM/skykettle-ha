@@ -14,6 +14,7 @@ from .const import *
 from .ble_scan import ble_scan
 from .ble_scan import ble_get_adapters
 from .kettle_connection import KettleConnection
+from .skykettle import SkyKettle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,26 +113,23 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the scan step."""
         errors = {}
         if user_input is not None:
-            if user_input[CONF_MAC] == "...": return await self.async_step_manual_mac()
             spl = user_input[CONF_MAC].split(' ', maxsplit=1)
             mac = spl[0]
-            name = spl[1][1:-2] if len(spl) >= 2 else None
-            if not await self.init_mac(mac): return self.async_abort(reason='already_configured')
+            name = spl[1][1:-1] if len(spl) >= 2 else None
+            if not await self.init_mac(mac):
+                # This kettle already configured
+                return self.async_abort(reason='already_configured')
             if name: self.config[CONF_FRIENDLY_NAME] = name
-            # Continue to options
+            # Continue to connect step
             return await self.async_step_connect()
 
         try:
             macs = await ble_scan(self.config.get(CONF_DEVICE, None), scan_time=BLE_SCAN_TIME)
             _LOGGER.debug(f"Scan result: {macs}")
-            macs_filtered = [mac for mac in macs if mac.name and mac.name.startswith("RK-")]
-            if len(macs_filtered) > 0:
-                macs = macs_filtered
-                _LOGGER.debug(f"Filtered scan result: {macs}")
-            if len(macs) == 0:
-                errors["base"] = "no_scan"
-            mac_list = [f"{r.mac} ({r.name})" for r in macs]
-            mac_list = mac_list + ["..."] # Manual
+            macs_filtered = [mac for mac in macs if mac.name and mac.name in SkyKettle.SUPPORTED_DEVICES]
+            if len(macs_filtered) == 0:
+                return self.async_abort(reason='kettle_not_found')
+            mac_list = [f"{r.mac} ({r.name})" for r in macs_filtered]
             schema = vol.Schema(
             {
                 vol.Required(CONF_MAC): vol.In(mac_list)
@@ -149,29 +147,6 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="scan",
             errors=errors,
             data_schema=schema
-        )
-
-    async def async_step_manual_mac(self, user_input=None):
-        """Handle the manual_mac step."""
-        errors = {}
-        if user_input is not None:
-            mac = user_input[CONF_MAC]
-            if re.match(REGEX_MAC, mac):
-                if not await self.init_mac(mac): return self.async_abort(reason='already_configured')
-            else:
-                errors[CONF_MAC] = "invalid_mac"
-            if not errors:
-                # Continue to options
-                return await self.async_step_connect()
-
-        MAC_SCHEMA = vol.Schema(
-        {
-            vol.Required(CONF_MAC): cv.string,
-        })
-        return self.async_show_form(
-            step_id="manual_mac",
-            errors=errors,
-            data_schema=MAC_SCHEMA
         )
 
     async def async_step_connect(self, user_input=None):

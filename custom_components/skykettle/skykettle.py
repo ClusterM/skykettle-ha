@@ -10,6 +10,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SkyKettle():
+    # Source: https://github.com/mavrikkk/ha_kettler/blob/master/custom_components/ready4sky/r4sconst.py
+    SUPPORTED_DEVICES = {'RK-M170S':0, 'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-G240S':1, 'RK-M216S':2, 'RK-M216S-E':2}
+
     MODE_BOIL = 0x00
     MODE_HEAT = 0x01
     MODE_BOIL_HEAT = 0x02
@@ -74,6 +77,17 @@ class SkyKettle():
         "color_interval", "is_on", "boil_time"])
     Stats = namedtuple("Stats", ["ontime", "energy_wh", "heater_on_count", "user_on_count"])
     FreshWaterInfo = namedtuple("FreshWaterInfo", ["is_on", "unknown1", "water_freshness_hours"])
+
+
+    def __init__(self, model):
+        _LOGGER.info(f"Kettle model: {model}")
+        self.model = model
+        if model in SkyKettle.SUPPORTED_DEVICES:
+            self.model_code = SkyKettle.SUPPORTED_DEVICES[model]
+            _LOGGER.debug(f"Kettle model code: {self.model_code}")
+        else:
+            self.model_code = 1
+            _LOGGER.warn(f"Unknown kettle model")
 
     @abstractmethod
     async def command(self, command, params=[]):

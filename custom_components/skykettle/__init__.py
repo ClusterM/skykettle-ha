@@ -28,12 +28,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DOMAIN not in hass.data: hass.data[DOMAIN] = {}
     if entry.entry_id not in hass.data: hass.data[DOMAIN][entry.entry_id] = {}
 
+    # Backward compatibility
+    model = entry.data.get(CONF_FRIENDLY_NAME, None)
+    if model != None and not model.endswith("S"):
+        config = dict(entry.data.items())
+        config[CONF_FRIENDLY_NAME] = model + "S"
+        hass.config_entries.async_update_entry(entry, data=config)
+
     kettle = KettleConnection(
         mac=entry.data[CONF_MAC],
         key=entry.data[CONF_PASSWORD],
         persistent=entry.data[CONF_PERSISTENT_CONNECTION],
         adapter=entry.data.get(CONF_DEVICE, None),
-        hass=hass
+        hass=hass,
+        model=entry.data.get(CONF_FRIENDLY_NAME, None)
     )
     hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION] = kettle
 

@@ -22,8 +22,8 @@ class KettleConnection(SkyKettle):
     STATS_INTERVAL = 15
     TARGET_TTL = 30
 
-    def __init__(self, mac, key, persistent=True, adapter=None, hass=None):
-        super().__init__()
+    def __init__(self, mac, key, persistent=True, adapter=None, hass=None, model=None):
+        super().__init__(model)
         self._child = None
         self._mac = mac
         self._key = key
@@ -164,8 +164,8 @@ class KettleConnection(SkyKettle):
                 _LOGGER.warning(f"Auth failed. You need to enable pairing mode on the kettle.")
                 raise AuthError("Auth failed")
             _LOGGER.debug("Auth ok")
-            await self.sync_time()
             self._sw_version = await self.get_version()
+            await self.sync_time()
 
     async def _disconnect_if_need(self):
         if not self.persistent and self.target_mode != SkyKettle.MODE_GAME:
