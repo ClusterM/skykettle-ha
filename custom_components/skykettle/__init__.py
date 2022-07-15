@@ -7,8 +7,9 @@ from homeassistant.const import *
 import homeassistant.helpers.event as ev
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
-from .kettle_connection import KettleConnection
 from datetime import timedelta
+from .kettle_connection import KettleConnection
+from .skykettle import SkyKettle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Backward compatibility
     model = entry.data.get(CONF_FRIENDLY_NAME, None)
-    if model != None and not model.endswith("S"):
+    if model != None and model not in SkyKettle.SUPPORTED_DEVICES and model + "S" in SkyKettle.SUPPORTED_DEVICES:
         config = dict(entry.data.items())
         config[CONF_FRIENDLY_NAME] = model + "S"
+        hass.config_entries.async_update_entry(entry, data=config)
+    elif model != None and model not in SkyKettle.SUPPORTED_DEVICES and model + "E" in SkyKettle.SUPPORTED_DEVICES:
+        config = dict(entry.data.items())
+        config[CONF_FRIENDLY_NAME] = model + "E"
         hass.config_entries.async_update_entry(entry, data=config)
 
     kettle = KettleConnection(

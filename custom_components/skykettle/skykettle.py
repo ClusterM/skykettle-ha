@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class SkyKettle():
     # Source: https://github.com/mavrikkk/ha_kettler/blob/master/custom_components/ready4sky/r4sconst.py
-    SUPPORTED_DEVICES = {'RK-M170S':0, 'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-G240S':1, 'RK-M216S':2, 'RK-M216S-E':2}
+    SUPPORTED_DEVICES = {'RK-M170S':0, 'RK-M170S-E':0, 'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-G240S':1, 'RK-M216S':2, 'RK-M216S-E':2}
 
     MODE_BOIL = 0x00
     MODE_HEAT = 0x01
