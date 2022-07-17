@@ -158,7 +158,8 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 key=self.config[CONF_PASSWORD],
                 persistent=True,
                 adapter=self.config.get(CONF_DEVICE, None),
-                hass=self.hass
+                hass=self.hass,
+                model=self.config.get(CONF_FRIENDLY_NAME, None)
             )
             tries = 3
             while tries > 0 and not kettle._last_connect_ok:
