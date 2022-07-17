@@ -10,9 +10,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SkyKettle():
-    # Source: https://github.com/mavrikkk/ha_kettler/blob/master/custom_components/ready4sky/r4sconst.py
-    SUPPORTED_DEVICES = {'RK-M170S':0, 'RK-M170S-E':0, 'RK-M171S':0, 'RK-M173S':0, 'RK-G200S':1, 'RK-G201S':1, 'RK-G202S':1, 'RK-G210S':1, 'RK-G211S':1, 'RK-G212S':1, 'RK-G240S':1, 'RK-M216S':2, 'RK-M216S-E':2}
-
     MODE_BOIL = 0x00
     MODE_HEAT = 0x01
     MODE_BOIL_HEAT = 0x02
@@ -83,11 +80,20 @@ class SkyKettle():
     def __init__(self, model):
         _LOGGER.info(f"Kettle model: {model}")
         self.model = model
-        if model in SkyKettle.SUPPORTED_DEVICES:
-            self.model_code = SkyKettle.SUPPORTED_DEVICES[model]
-            _LOGGER.debug(f"Kettle model code: {self.model_code}")
-        else:
+        self.model_code = self.get_model_code(model)
+        if not self.model_code:
             raise SkyKettleError("Unknown kettle model")
+
+    @staticmethod
+    def get_model_code(model):
+        if model:
+            if model.startswith("RK-M1"):
+                return 0
+            elif model.startswith("RK-G2"):
+                return 1
+            elif model.startswith("RK-M2"):
+                return 2
+        return None
 
     @abstractmethod
     async def command(self, command, params=[]):
@@ -107,20 +113,29 @@ class SkyKettle():
         return (major, minor)
 
     async def turn_on(self):
-        r = await self.command(SkyKettle.COMMAND_TURN_ON)
-        if r[0] != 1: raise SkyKettleError("can't turn on")
-        _LOGGER.debug(f"Turned on")
+        if self.model_code in [1, 2]:
+            r = await self.command(SkyKettle.COMMAND_TURN_ON)
+            if r[0] != 1: raise SkyKettleError("can't turn on")
+            _LOGGER.debug(f"Turned on")
+        else:
+            _LOGGER.debug(f"turn_on is not supported by this model")
 
     async def turn_off(self):
-        r = await self.command(SkyKettle.COMMAND_TURN_OFF)
-        if r[0] != 1: raise SkyKettleError("can't turn off")
-        _LOGGER.debug(f"Turned off")
+        if self.model_code in [0, 1, 2]:
+            r = await self.command(SkyKettle.COMMAND_TURN_OFF)
+            if r[0] != 1: raise SkyKettleError("can't turn off")
+            _LOGGER.debug(f"Turned off")
+        else:
+            _LOGGER.debug(f"turn_off is not supported by this model")
 
     async def set_main_mode(self, mode, target_temp = 0, boil_time = 0):
         if self.model_code in [0]:
             data = pack("BxBx", int(mode), int(target_temp))
         elif self.model_code in [1, 2]:
             data = pack("BxBxxxxxxxxxxBxx", int(mode), int(target_temp), int(0x80 + boil_time))
+        else:
+            _LOGGER.debug(f"set_main_mode is not supported by this model")
+            return
         r = await self.command(SkyKettle.COMMAND_SET_MAIN_MODE, data)
         if r[0] != 1: raise SkyKettleError("can't set mode")
         _LOGGER.debug(f"Mode set: mode={mode} ({SkyKettle.MODE_NAMES[mode]}), target_temp={target_temp}, boil_time={boil_time}")
@@ -144,6 +159,9 @@ class SkyKettle():
                 is_on = status.is_on == 2,
                 boil_time = status.boil_time - 0x80
             )
+        else:
+            _LOGGER.debug(f"get_status is not supported by this model")
+            return
         _LOGGER.debug(f"Status: mode={status.mode} ({SkyKettle.MODE_NAMES[status.mode]}), is_on={status.is_on}, "+
                      f"target_temp={status.target_temp}, current_temp={status.current_temp}, sound_enabled={status.sound_enabled}, "+
                      f"color_interval={status.color_interval}, boil_time={status.boil_time}")
@@ -171,7 +189,7 @@ class SkyKettle():
             _LOGGER.debug(f"get_time is not supported by this model")
 
     async def set_lamp_auto_off_hours(self, hours):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]:
             data = pack("<H", int(hours))
             r = await self.command(SkyKettle.COMMAND_SET_AUTO_OFF_HOURS, data)
             if r[0] != 0: raise SkyKettleError("can't set lamp auto off hours")
@@ -180,7 +198,7 @@ class SkyKettle():
             _LOGGER.debug(f"set_lamp_auto_off_hours is not supported by this model")
 
     async def get_lamp_auto_off_hours(self):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]:
             r = await self.command(SkyKettle.COMMAND_GET_AUTO_OFF_HOURS)
             hours, = unpack("<H", r)
             _LOGGER.debug(f"Lamp auto off hours={hours}")
@@ -189,7 +207,7 @@ class SkyKettle():
             _LOGGER.debug(f"get_lamp_auto_off_hours is not supported by this model")
 
     async def get_colors(self, light_type):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]: # Not sure
             r = await self.command(SkyKettle.COMMAND_GET_COLORS, [light_type])
             colors_set = SkyKettle.ColorsSet(*unpack("BBBBBBBBBBBBBBBB", r))
             _LOGGER.debug(f"{colors_set}")
@@ -198,7 +216,7 @@ class SkyKettle():
             _LOGGER.debug(f"get_colors is not supported by this model")
 
     async def set_colors(self, colors_set):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]: # Not sure
             data = pack("BBBBBBBBBBBBBBBB", *colors_set)
             r = await self.command(SkyKettle.COMMAND_SET_COLORS, data)
             if r[0] != 0: raise SkyKettleError("can't set colors")
@@ -207,7 +225,7 @@ class SkyKettle():
             _LOGGER.debug(f"set_colors is not supported by this model")
 
     async def commit(self):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]:
             r = await self.command(SkyKettle.COMMAND_COMMIT_SETTINGS)
             if r[0] != 1: raise SkyKettleError("can't commit settings")
             _LOGGER.debug(f"Settings commited")
@@ -215,7 +233,7 @@ class SkyKettle():
             _LOGGER.debug(f"commit is not supported by this model")
 
     async def set_lamp_color_interval(self, secs):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]:
             data = pack("<H", int(secs))
             r = await self.command(SkyKettle.COMMAND_SET_COLOR_INTERVAL, data)
             if r[0] != 0: raise SkyKettleError("can't set lamp color change interval")
@@ -224,7 +242,7 @@ class SkyKettle():
             _LOGGER.debug(f"set_lamp_color_interval is not supported by this model")
 
     async def impulse_color(self, r, g, b, brightness=0xff, interval=0):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]:
             data = pack("<BBBBH", r, g, b, brightness, interval)
             r = await self.command(SkyKettle.COMMAND_IMPULSE_COLOR, data)
             if r[0] != 1: raise SkyKettleError("can't fire color impulse")
@@ -252,7 +270,7 @@ class SkyKettle():
             _LOGGER.debug(f"get_light_switch is not supported by this model")
 
     async def set_sound(self, on):
-        if self.model_code in [1, 2]: # Not sure
+        if self.model_code in [1, 2]:
             data = pack("?", on)
             r = await self.command(SkyKettle.COMMAND_SET_SOUND, data)
             if r[0] != 1: raise SkyKettleError("can't switch sound")
@@ -261,7 +279,7 @@ class SkyKettle():
             _LOGGER.debug(f"set_sound is not supported by this model")
 
     async def set_fresh_water(self, on, unknown1=48):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]:
             data = pack("<x?Hxxxxxxxxxxxx", on, int(unknown1))
             r = await self.command(SkyKettle.COMMAND_SET_FRESH_WATER, data)
             _LOGGER.debug(f"Fresh water notification switched {'on' if on else 'off'}")
@@ -269,7 +287,7 @@ class SkyKettle():
             _LOGGER.debug(f"set_fresh_water is not supported by this model")
 
     async def get_fresh_water(self):
-        if self.model_code in [1]: # Not sure
+        if self.model_code in [1, 2]:
             r = await self.command(SkyKettle.COMMAND_GET_FRESH_WATER, [0x00])
             info = SkyKettle.FreshWaterInfo(*unpack("<x?HHxxxxxxxxxx", r))
             _LOGGER.debug(f"Fresh water notification is {'on' if info.is_on else 'off'}, unknown1={info.unknown1}, water_freshness_hours={info.water_freshness_hours}")
@@ -278,14 +296,17 @@ class SkyKettle():
             _LOGGER.debug(f"get_fresh_water is not supported by this model")
 
     async def get_stats(self):
-        r1 = await self.command(SkyKettle.COMMAND_GET_STATS1, [0x00])
-        stats1 = unpack("<xxLLLxx", r1)
-        r2 = await self.command(SkyKettle.COMMAND_GET_STATS2, [0x00])
-        stats2 = unpack("<xxxLxxxxxxxxx", r2)
-        stats = SkyKettle.Stats(*(stats1 + stats2))
-        stats = stats._replace(ontime=timedelta(seconds=stats.ontime))
-        _LOGGER.debug(f"Stats: ontime={stats.ontime}, energy_wh={stats.energy_wh}, user_on_count={stats.user_on_count}, heater_on_count={stats.heater_on_count}")
-        return stats
+        if self.model_code in [1, 2]:
+            r1 = await self.command(SkyKettle.COMMAND_GET_STATS1, [0x00])
+            stats1 = unpack("<xxLLLxx", r1)
+            r2 = await self.command(SkyKettle.COMMAND_GET_STATS2, [0x00])
+            stats2 = unpack("<xxxLxxxxxxxxx", r2)
+            stats = SkyKettle.Stats(*(stats1 + stats2))
+            stats = stats._replace(ontime=timedelta(seconds=stats.ontime))
+            _LOGGER.debug(f"Stats: ontime={stats.ontime}, energy_wh={stats.energy_wh}, user_on_count={stats.user_on_count}, heater_on_count={stats.heater_on_count}")
+            return stats
+        else:
+            _LOGGER.debug(f"get_stats is not supported by this model")
 
 
 class SkyKettleError(Exception):

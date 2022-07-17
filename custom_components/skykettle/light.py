@@ -112,11 +112,13 @@ class KettleLight(LightEntity):
 
     @property
     def available(self):
-        if self.kettle.model_code != 1: return False # Not sure
-        if self.light_type == LIGHT_GAME:
-            return self.kettle.available
+        if self.kettle.model_code in [1, 2]:
+            if self.light_type == LIGHT_GAME:
+                return self.kettle.available
+            else:
+                return self.kettle.available and self.kettle.get_color(self.light_type, self.n) != None
         else:
-            return self.kettle.available and self.kettle.get_color(self.light_type, self.n) != None
+            return False
 
     @property
     def entity_category(self):

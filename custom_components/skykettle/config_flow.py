@@ -126,7 +126,7 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             macs = await ble_scan(self.config.get(CONF_DEVICE, None), scan_time=BLE_SCAN_TIME)
             _LOGGER.debug(f"Scan result: {macs}")
-            macs_filtered = [mac for mac in macs if mac.name and mac.name in SkyKettle.SUPPORTED_DEVICES]
+            macs_filtered = [mac for mac in macs if SkyKettle.get_model_code(mac.name)]
             if len(macs_filtered) == 0:
                 return self.async_abort(reason='kettle_not_found')
             mac_list = [f"{r.mac} ({r.name})" for r in macs_filtered]
