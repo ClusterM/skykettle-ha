@@ -22,15 +22,17 @@ LIGHT_GAME = "light"
 
 async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
     """Set up the SkyKettle entry."""
-    async_add_entities([
-        KettleLight(hass, entry, LIGHT_GAME),
-        KettleLight(hass, entry, SkyKettle.LIGHT_BOIL, 0),
-        KettleLight(hass, entry, SkyKettle.LIGHT_BOIL, 1),
-        KettleLight(hass, entry, SkyKettle.LIGHT_BOIL, 2),
-        KettleLight(hass, entry, SkyKettle.LIGHT_LAMP, 0),
-        KettleLight(hass, entry, SkyKettle.LIGHT_LAMP, 1),
-        KettleLight(hass, entry, SkyKettle.LIGHT_LAMP, 2),
-    ])
+    model_code = hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].model_code
+    if model_code in [1, 2]:
+        async_add_entities([
+            KettleLight(hass, entry, LIGHT_GAME),
+            KettleLight(hass, entry, SkyKettle.LIGHT_BOIL, 0),
+            KettleLight(hass, entry, SkyKettle.LIGHT_BOIL, 1),
+            KettleLight(hass, entry, SkyKettle.LIGHT_BOIL, 2),
+            KettleLight(hass, entry, SkyKettle.LIGHT_LAMP, 0),
+            KettleLight(hass, entry, SkyKettle.LIGHT_LAMP, 1),
+            KettleLight(hass, entry, SkyKettle.LIGHT_LAMP, 2),
+        ])
 
 
 class KettleLight(LightEntity):

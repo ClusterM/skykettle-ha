@@ -18,10 +18,14 @@ SENSOR_TYPE_SUCCESS_RATE = "success_rate"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the SkyKettle entry."""
+    model_code = hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].model_code
     async_add_entities([
-        SkySensor(hass, entry, SENSOR_TYPE_WATER_FRESHNESS),
         SkySensor(hass, entry, SENSOR_TYPE_SUCCESS_RATE),
     ])
+    if model_code in [1, 2]:
+        async_add_entities([
+            SkySensor(hass, entry, SENSOR_TYPE_WATER_FRESHNESS),
+        ])
 
 
 class SkySensor(SensorEntity):

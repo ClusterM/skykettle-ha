@@ -22,14 +22,16 @@ NUMBER_LAMP_AUTO_OFF_HOURS = "lamp_auto_off_hours"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the SkyKettle entry."""
-    async_add_entities([
-        SkyNumber(hass, entry, NUMBER_TYPE_BOIL_TIME),
-        SkyNumber(hass, entry, NUMBER_TEMPERATURE_LOW),
-        SkyNumber(hass, entry, NUMBER_TEMPERATURE_MID),
-        SkyNumber(hass, entry, NUMBER_TEMPERATURE_HIGH),
-        SkyNumber(hass, entry, NUMBER_COLOR_INTERVAL),
-        SkyNumber(hass, entry, NUMBER_LAMP_AUTO_OFF_HOURS),
-    ])
+    model_code = hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].model_code
+    if model_code in [1, 2]:
+        async_add_entities([
+            SkyNumber(hass, entry, NUMBER_TYPE_BOIL_TIME),
+            SkyNumber(hass, entry, NUMBER_TEMPERATURE_LOW),
+            SkyNumber(hass, entry, NUMBER_TEMPERATURE_MID),
+            SkyNumber(hass, entry, NUMBER_TEMPERATURE_HIGH),
+            SkyNumber(hass, entry, NUMBER_COLOR_INTERVAL),
+            SkyNumber(hass, entry, NUMBER_LAMP_AUTO_OFF_HOURS),
+        ])
 
 
 class SkyNumber(NumberEntity):

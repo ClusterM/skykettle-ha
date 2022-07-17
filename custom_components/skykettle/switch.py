@@ -20,12 +20,16 @@ SWITCH_LIGHT_BOIL = "light_boil"
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the SkyKettle entry."""
+    model_code = hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].model_code
     async_add_entities([
-        SkySwitch(hass, entry, SWITCH_MAIN),
-        SkySwitch(hass, entry, SWITCH_SOUND),
-        SkySwitch(hass, entry, SWITCH_LIGHT_SYNC),
-        SkySwitch(hass, entry, SWITCH_LIGHT_BOIL),
+        SkySwitch(hass, entry, SWITCH_MAIN)
     ])
+    if model_code in [1, 2]:
+        async_add_entities([
+            SkySwitch(hass, entry, SWITCH_SOUND),
+            SkySwitch(hass, entry, SWITCH_LIGHT_SYNC),
+            SkySwitch(hass, entry, SWITCH_LIGHT_BOIL),
+        ])
 
 
 class SkySwitch(SwitchEntity):
