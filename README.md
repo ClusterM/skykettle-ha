@@ -7,6 +7,11 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 
 ![image](https://user-images.githubusercontent.com/4236181/151022885-1a93c4d5-b5fe-40f2-8d1f-ddb458ea2c09.png)
 
+## Supported models
+* **RK-M1**xx
+* **RK-G2**xx
+* **RK-M2**xx
+
 ## Features
 * Allows to set target temperature.
 * Allows to set any boil mode: heating (keep desired temperature), standard boiling, boiling+heating.
