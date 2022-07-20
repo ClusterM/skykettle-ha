@@ -11,6 +11,7 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 * **RK-M1**xx
 * **RK-G2**xx
 * **RK-M2**xx
+* **RFS-KK**xx
 
 ## Features
 * Allows to set target temperature.
