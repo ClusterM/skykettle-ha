@@ -23,7 +23,7 @@ LIGHT_GAME = "light"
 async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
     """Set up the SkyKettle entry."""
     model_code = hass.data[DOMAIN][entry.entry_id][DATA_CONNECTION].model_code
-    if model_code in [1, 2]:
+    if model_code in [1, 2, 3]:
         async_add_entities([
             KettleLight(hass, entry, LIGHT_GAME),
             KettleLight(hass, entry, SkyKettle.LIGHT_BOIL, 0),
@@ -114,7 +114,7 @@ class KettleLight(LightEntity):
 
     @property
     def available(self):
-        if self.kettle.model_code in [1, 2]:
+        if self.kettle.model_code in [1, 2, 3]:
             if self.light_type == LIGHT_GAME:
                 return self.kettle.available
             else:

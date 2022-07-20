@@ -93,7 +93,7 @@ class SkyWaterHeater(WaterHeaterEntity):
 
     @property
     def operation_list(self):
-        if self.kettle.model_code in [1, 2]:
+        if self.kettle.model_code in [1, 2, 3]:
             return [
                 STATE_OFF,
                 SkyKettle.MODE_NAMES[SkyKettle.MODE_HEAT],

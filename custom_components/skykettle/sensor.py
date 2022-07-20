@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([
         SkySensor(hass, entry, SENSOR_TYPE_SUCCESS_RATE),
     ])
-    if model_code in [1, 2]:
+    if model_code in [1, 2, 3]:
         async_add_entities([
             SkySensor(hass, entry, SENSOR_TYPE_WATER_FRESHNESS),
         ])
