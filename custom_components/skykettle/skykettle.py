@@ -91,6 +91,8 @@ class SkyKettle():
                 return 0
             elif model.startswith("RK-G2"):
                 return 1
+            elif model.startswith("RFS-KK"):
+                return 1
             elif model.startswith("RK-M2"):
                 return 2
         return None
