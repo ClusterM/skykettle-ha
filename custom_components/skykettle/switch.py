@@ -24,7 +24,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([
         SkySwitch(hass, entry, SWITCH_MAIN)
     ])
-    if model_code in [1, 2, 3]:
+    if model_code in [1, 2]:
         async_add_entities([
             SkySwitch(hass, entry, SWITCH_SOUND),
             SkySwitch(hass, entry, SWITCH_LIGHT_SYNC),
