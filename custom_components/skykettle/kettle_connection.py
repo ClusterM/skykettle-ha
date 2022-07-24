@@ -231,6 +231,7 @@ class KettleConnection(SkyKettle):
                         _LOGGER.info("Need to switch mode of the kettle and restart it")
                         await self.turn_off()
                         _LOGGER.info("The kettle was turned off")
+                        await asyncio.sleep(0.2)
                         await self.set_main_mode(target_mode, target_temp, boil_time)
                         _LOGGER.info("New mode was set")
                         await self.turn_on()
