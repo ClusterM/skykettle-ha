@@ -9,6 +9,7 @@
             "hatttool_not_found": "hatttool binary not found.",
             "timeout_not_found": "\"timeout\" binary not found.",
             "permission_error": "Permission error, make sure that hcitool and hatttool are granted with privileges (check instructions).",
+            "unknown_model": "Your kettle model is not yet supported by this integration. But you can help add support for it! Contact the author via the 'issues' section on GitHub ('report an issue' in HACS).",
             "unknown": "Unknown error, please check logs."
         },
         "error": {
