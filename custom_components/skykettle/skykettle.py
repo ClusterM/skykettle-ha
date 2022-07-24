@@ -107,8 +107,7 @@ class SkyKettle():
         "temp_mid", "unknown1", "r_mid", "g_mid", "b_mid",
         "temp_high", "unknown2", "r_high", "g_high", "b_high"])
     Status = namedtuple("Status", ["mode", "target_temp", "sound_enabled", "current_temp",
-        "color_interval", "is_on", "boil_time"])
-    StatusSimple = namedtuple("StatusSimple", ["mode", "target_temp", "is_on", "current_temp"])
+        "color_interval", "parental_control", "is_on", "error_code", "boil_time"])
     Stats = namedtuple("Stats", ["ontime", "energy_wh", "heater_on_count", "user_on_count"])
     FreshWaterInfo = namedtuple("FreshWaterInfo", ["is_on", "unknown1", "water_freshness_hours"])
 
@@ -195,25 +194,30 @@ class SkyKettle():
         r = await self.command(SkyKettle.COMMAND_GET_STATUS)
         # if self.model_code in [MODELS_1] # ???
         if self.model_code in [SkyKettle.MODELS_2, SkyKettle.MODELS_3]: # RK-M173S (?), RK-G200
-            mode, target_temp, is_on, current_temp = unpack("<BxBxxxxxBxBxxxxx", r)
+            mode, target_temp, is_on, current_temp = unpack("<BxBxxxxx?xBxxxxx", r)
             status = Status(mode=mode,
                 target_temp=target_temp,
-                is_on=is_on==2,
                 current_temp=current_temp,
                 sound_enabled=None,
-                boil_time=None,
-                color_interval=None)
+                color_interval=None,
+                parental_control=False,
+                is_on=is_on,
+                error_code=None,
+                boil_time=None)
         elif self.model_code in [SkyKettle.MODELS_4, SkyKettle.MODELS_5, SkyKettle.MODELS_6, SkyKettle.MODELS_7]: # RK-G2xxS, RK-M13xS, RK-M21xS, RK-M223S
             # New models
-            status = SkyKettle.Status(*unpack("<BxBx?BHBxxxxBxx", r))
+            status = SkyKettle.Status(*unpack("<BxBx?BB??BxxxBxx", r))
             status = status._replace(
-                is_on = status.is_on == 2,
-                boil_time = status.boil_time - 0x80
+                boil_time = status.boil_time - 0x80,
+                error_code=None if status.error_code == 0 else status.error_code
             )
+        else:
+            _LOGGER.debug(f"get_status is not supported by this model")
+            return
         if self.model_code in [SkyKettle.MODELS_2, SkyKettle.MODELS_3]: # RK-M173S (?), RK-G200
             if status.mode == SkyKettle.MODE_BOIL and status.target_temp > 0:
                 status = status._replace(
-                    mode = SkyKettle.MODE_BOIL_HEAT
+                    mode=SkyKettle.MODE_BOIL_HEAT
                 )
         if self.model_code in [SkyKettle.MODELS_1]: # RK-M170S (?)
             if status.target_temp == 1:
@@ -229,11 +233,8 @@ class SkyKettle():
             else:
                 target_temp = 0
             status = status._replace(
-                target_temp = target_temp
+                target_temp=target_temp
             )
-        else:
-            _LOGGER.debug(f"get_status is not supported by this model")
-            return
         _LOGGER.debug(f"Status: mode={status.mode} ({SkyKettle.MODE_NAMES[status.mode]}), is_on={status.is_on}, "+
                      f"target_temp={status.target_temp}, current_temp={status.current_temp}, sound_enabled={status.sound_enabled}, "+
                      f"color_interval={status.color_interval}, boil_time={status.boil_time}")
@@ -371,7 +372,7 @@ class SkyKettle():
         if self.model_code in [1, 2]:
             r1 = await self.command(SkyKettle.COMMAND_GET_STATS1, [0x00])
             stats1 = unpack("<xxLLLxx", r1)
-            if self.model_code in [SkyKettle.MODELS_4]: # Not sure
+            if self.model_code in [SkyKettle.MODELS_4, SkyKettle.MODELS_5, SkyKettle.MODELS_6, SkyKettle.MODELS_7]: # Not sure
                 r2 = await self.command(SkyKettle.COMMAND_GET_STATS2, [0x00])
                 stats2 = unpack("<xxxLxxxxxxxxx", r2)
             else:

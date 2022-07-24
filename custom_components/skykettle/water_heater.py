@@ -140,6 +140,8 @@ class SkyWaterHeater(WaterHeaterEntity):
             "lamp_auto_off_hours": self.kettle.lamp_auto_off_hours,
             "boil_light": self.kettle.light_switch_boil,
             "sync_light": self.kettle.light_switch_sync,
+            "parental_control": self.kettle.parental_control,
+            "error_code": self.kettle.error_code,
         }
         return data
 

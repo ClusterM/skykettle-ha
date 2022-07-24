@@ -491,6 +491,16 @@ class KettleConnection(SkyKettle):
     def colors_lamp(self):
         return self._colors.get(SkyKettle.LIGHT_LAMP, None)
     
+    @property
+    def parental_control(self):
+        if not self._status: return None
+        return self._status.parental_control
+
+    @property
+    def error_code(self):
+        if not self._status: return None
+        return self._status.error_code
+
     def get_color(self, light_type, n):
         if light_type not in self._colors: return None
         colors = self._colors[light_type]
