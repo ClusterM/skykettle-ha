@@ -369,14 +369,11 @@ class SkyKettle():
             _LOGGER.debug(f"get_fresh_water is not supported by this model")
 
     async def get_stats(self):
-        if self.model_code in [1, 2]:
+        if self.model_code in [SkyKettle.MODELS_4, SkyKettle.MODELS_5, SkyKettle.MODELS_6, SkyKettle.MODELS_7]: # Not sure
             r1 = await self.command(SkyKettle.COMMAND_GET_STATS1, [0x00])
             stats1 = unpack("<xxLLLxx", r1)
-            if self.model_code in [SkyKettle.MODELS_4, SkyKettle.MODELS_5, SkyKettle.MODELS_6, SkyKettle.MODELS_7]: # Not sure
-                r2 = await self.command(SkyKettle.COMMAND_GET_STATS2, [0x00])
-                stats2 = unpack("<xxxLxxxxxxxxx", r2)
-            else:
-                stats2 = None,
+            r2 = await self.command(SkyKettle.COMMAND_GET_STATS2, [0x00])
+            stats2 = unpack("<xxxLxxxxxxxxx", r2)
             stats = SkyKettle.Stats(*(stats1 + stats2))
             stats = stats._replace(ontime=timedelta(seconds=stats.ontime))
             _LOGGER.debug(f"Stats: ontime={stats.ontime}, energy_wh={stats.energy_wh}, user_on_count={stats.user_on_count}, heater_on_count={stats.heater_on_count}")
