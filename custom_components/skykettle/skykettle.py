@@ -115,14 +115,16 @@ class SkyKettle():
     def __init__(self, model):
         _LOGGER.info(f"Kettle model: {model}")
         self.model = model
-        self.model_code = self.get_model_code(model)
+        self.model_code = self.get_model_code(model, backward_compatibility=True)
         if not self.model_code:
             raise SkyKettleError("Unknown kettle model")
 
     @staticmethod
-    def get_model_code(model):
+    def get_model_code(model, backward_compatibility=False):
         if model in SkyKettle.MODEL_TYPE:
             return SkyKettle.MODEL_TYPE[model]
+        if backward_compatibility and model + 'S' in SkyKettle.MODEL_TYPE:
+            return SkyKettle.MODEL_TYPE[model + 'S']
         return None
 
     @abstractmethod
