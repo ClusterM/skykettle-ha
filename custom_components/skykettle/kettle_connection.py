@@ -438,7 +438,7 @@ class KettleConnection(SkyKettle):
         elif target_mode in [SkyKettle.MODE_LAMP, SkyKettle.MODE_GAME]:
             target_temp = 85
         elif target_temp == None:
-            target_temp = SkyKettle.MIN_TEMP
+            target_temp = SkyKettle.MAX_TEMP
         else:
             target_temp = self.limit_temp(target_temp)
         if target_temp != self.target_temp:
