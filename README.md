@@ -8,10 +8,33 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 ![image](https://user-images.githubusercontent.com/4236181/151022885-1a93c4d5-b5fe-40f2-8d1f-ddb458ea2c09.png)
 
 ## Supported models
-* **RK-M1**xx
-* **RK-G2**xx
-* **RK-M2**xx
-* **RFS-KK**xx
+* RK-M171S
+* RK-M123S
+* RK-M173S
+* RK-G200
+* RK-G200S
+* RK-G201S
+* RK-G202S
+* RK-G203S
+* RK-G204S
+* RK-G210S
+* RK-G211S
+* RK-G212S
+* RK-G213S
+* RK-G214S
+* RK-G215S
+* RK-G233S
+* RK-G240S
+* RK-M215S
+* RK-M216S
+* RK-M223S
+* RK-M136S
+* RK-M139S
+* RFS-KKL002
+* RFS-KKL003
+* ???
+
+If your kettle model is not listed, please write an [issue](https://github.com/ClusterM/skykettle-ha/issues) and I'll try to add support for it with your help.
 
 ## Features
 * Allows to set target temperature.
