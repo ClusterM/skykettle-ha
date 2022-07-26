@@ -71,36 +71,33 @@ class SkyKettle():
     MAX_TEMP = 90
     MIN_TEMP = 35
 
-    COMMAND_GET_VERSION = 0x01 # [] -> [03 09]
+    COMMAND_GET_VERSION = 0x01
     # COMMAND_UNKNOWN1 = 0x02 # [] -> [00] ???
-    COMMAND_TURN_ON = 0x03 # [] -> 00/01 (01 - ok)
-    COMMAND_TURN_OFF = 0x04 # [] -> 00/01 (01 - ok)
-    COMMAND_SET_MAIN_MODE = 0x05 # [04(mode) 00 23(target_temp) 00 00 00 00 00 00 00 00 00 00 80 00 00] -> 00/01 (01 - ok)
-    COMMAND_GET_STATUS = 0x06 #   [] -> [04(mode) 00 23(target_temp) 00 01(sound_enabled) 5D(temp) 3C00(color_interval) 02(is_on) 00 00 00 00 80(boil_time) 00 00]
-    COMMAND_GET_AUTO_OFF_HOURS = 0x30 # #  = 0x30          [] -> 0100, [] -> 1800, 0800
+    COMMAND_TURN_ON = 0x03
+    COMMAND_TURN_OFF = 0x04
+    COMMAND_SET_MAIN_MODE = 0x05
+    COMMAND_GET_STATUS = 0x06
+    COMMAND_GET_AUTO_OFF_HOURS = 0x30
     COMMAND_SET_COLORS = 0x32
     COMMAND_GET_COLORS = 0x33
-    COMMAND_SET_COLOR_INTERVAL = 0x34 #         # 1E 00 -> 00, 3C00 -> 00, 5A00, 7800
-    COMMAND_GET_LIGHT_SWITCH = 0x35 #         C8 -> [c8 00 00/01 c8 00] - включена ли световая индикация
-                            #       00 -> [00 00 00/01 00 00] - включена ли подсветка кипячения
-                            #       01 -> [01 00 01 01 00] - запрос чего-то ещё???
-    COMMAND_COMMIT_SETTINGS = 0x36 # [] -> 01   - после смены цвета, сохранение-обновление?
-    COMMAND_SET_LIGHT_SWITCH = 0x37 # [00 00 00/01] - подсветка кипячения, [C8 C8 00/01] - световая индикация -> [00]
-
-    COMMAND_IMPULSE_COLOR = 0x38 # [63(r) 00(g) DF(b) FF(brightness) 0000(fade interval)] -> 01
-    COMMAND_SET_AUTO_OFF_HOURS = 0x39 # [18(hours) 00] -> 00
-    COMMAND_SET_SOUND = 0x3C # [00/01] -> 01
+    COMMAND_SET_COLOR_INTERVAL = 0x34
+    COMMAND_GET_LIGHT_SWITCH = 0x35
+    COMMAND_COMMIT_SETTINGS = 0x36
+    COMMAND_SET_LIGHT_SWITCH = 0x37
+    COMMAND_IMPULSE_COLOR = 0x38
+    COMMAND_SET_AUTO_OFF_HOURS = 0x39
+    COMMAND_SET_SOUND = 0x3C
     COMMAND_GET_STATS1 = 0x47
     COMMAND_GET_STATS2 = 0x50
-    COMMAND_SET_FRESH_WATER = 0x51 # [00 00/01 30 00 00 00 00 00 00 00 00 00 00 00 00 00] -> [00 00]
-    COMMAND_GET_FRESH_WATER = 0x52 # 00 -> [00 00/01 3000000000000000000000000000]
-    COMMAND_SYNC_TIME = 0x6E # [7548D761(unix_timestamp) 302A0000(offset_minutes)] -> 00
+    COMMAND_SET_FRESH_WATER = 0x51
+    COMMAND_GET_FRESH_WATER = 0x52
+    COMMAND_SYNC_TIME = 0x6E
     COMMAND_GET_TIME = 0x6F
-    COMMAND_GET_SCHEDULE_RECORD = 0x70 # [xx] -> [24 57 D7 61 01 01 00 00 00 0F 01 00 00 00 00 00]
-    COMMAND_ADD_SCHEDULE_RECORD = 0x71 # [14 58 D7 61 00 01 00 00 00 0F 01 00 00 00 00 00] -> [02 00]
-    COMMAND_GET_SCHEDULE_COUNT = 0x73 # [] -> [07 0A 01 00 00 00 00 00 00 00 00 00 00 00 00 00]
-    COMMAND_DEL_SCHEDULE_RECORD  = 0x74 # [00] -> [07] ???
-    COMMAND_AUTH = 0xFF # [0000000000000000(password)]-> 00/01 (01 - ok)
+    COMMAND_GET_SCHEDULE_RECORD = 0x70
+    COMMAND_ADD_SCHEDULE_RECORD = 0x71
+    COMMAND_GET_SCHEDULE_COUNT = 0x73
+    COMMAND_DEL_SCHEDULE_RECORD  = 0x74
+    COMMAND_AUTH = 0xFF
 
     ColorsSet = namedtuple("ColorsSet", ["light_type",
         "temp_low", "brightness", "r_low", "g_low", "b_low",
