@@ -8,9 +8,7 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 ![image](https://user-images.githubusercontent.com/4236181/151022885-1a93c4d5-b5fe-40f2-8d1f-ddb458ea2c09.png)
 
 ## Supported models
-* RK-M171S
-* RK-M123S
-* RK-M173S
+
 * RK-G200
 * RK-G200S
 * RK-G201S
@@ -25,11 +23,12 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 * RK-G215S
 * RK-G233S
 * RK-G240S
+* RK-M139S
+* RK-M171S
 * RK-M215S
 * RK-M216S
 * RK-M223S
 * RK-M136S
-* RK-M139S
 * RFS-KKL002
 * RFS-KKL003
 * ???
