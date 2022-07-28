@@ -31,6 +31,7 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 * RK-M136S
 * RFS-KKL002
 * RFS-KKL003
+* RFS-KKL004
 * ???
 
 If your kettle model is not listed, please write an [issue](https://github.com/ClusterM/skykettle-ha/issues) and I'll try to add support for it with your help.
