@@ -37,6 +37,7 @@ class SkyKettle():
         "RK-G215S": MODELS_4,
         "RFS-KKL002": MODELS_4,
         "RFS-KKL003": MODELS_4,
+        "RFS-KKL004": MODELS_4,
         "RK-G233S": MODELS_5,
         "RK-G240S": MODELS_5,
         "RK-M215S": MODELS_6,
