@@ -190,7 +190,7 @@ class SkyKettle():
         # if self.model_code in [MODELS_1] # ???
         if self.model_code in [SkyKettle.MODELS_2, SkyKettle.MODELS_3]: # RK-M173S (?), RK-G200
             mode, target_temp, is_on, current_temp = unpack("<BxBxxxxx?xBxxxxx", r)
-            status = Status(mode=mode,
+            status = SkyKettle.Status(mode=mode,
                 target_temp=target_temp,
                 current_temp=current_temp,
                 sound_enabled=None,
