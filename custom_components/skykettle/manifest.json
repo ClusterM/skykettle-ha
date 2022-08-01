@@ -1,7 +1,7 @@
 {
   "domain": "skykettle",
   "name": "SkyKettle",
-  "version": "1.6",
+  "version": "1.7",
   "dependencies": [],
   "requirements": ["pexpect==4.8.0"],
   "codeowners": ["@clusterm"],
