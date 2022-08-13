@@ -27,6 +27,7 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 * RK-M171S
 * RK-M215S
 * RK-M216S
+* RK-M216S-E
 * RK-M223S
 * RK-M136S
 * RFS-KKL002
@@ -47,21 +48,13 @@ If your kettle model is not listed, please write an [issue](https://github.com/C
 
 ## Requirements
 
-* Linux-based server with Home Assistant.
 * Bluetooth adapter with BLE support.
-* [timeout](https://command-not-found.com/timeout) utility.
-* [hcitool](https://command-not-found.com/hcitool) utility.
-* [gatttool](https://command-not-found.com/gatttool) utility.
+* Home Assistant [Bluetooth integration](https://www.home-assistant.io/integrations/bluetooth/) (comes with Home Assistant v2022.8.1+)
 
 ## How to use
 
 * Install it via [HACS](https://hacs.xyz/) - search for **SkyKettle** or just copy [skykettle](https://github.com/ClusterM/skykettle_ha/tree/master/custom_components/skykettle) directory to your `custom_components` directory.
-* If you are not using **Home Assistant Operating System** make sure that `hcitool` and `getttool` (or just Home Assistant binary) has access to BLE device. To do it just execute those commands:
-```
-sudo setcap 'cap_net_raw,cap_net_admin+eip' `which hcitool`
-sudo setcap 'cap_net_raw,cap_net_admin+eip' `which gatttool`
-```
-* Add **SkyKettle** integration just like any other integration (press Shift+F5 if it's not listed).
+* Add **SkyKettle** integration just like any other integration (restart Home Assistant and press Shift+F5 if it's not listed).
 * Make sure that the Kettle is on the stand and it's plugged into the outlet.
 * Select MAC address of your kettle from the list.
 * Tune rest of the settings if you want.
@@ -221,7 +214,6 @@ cards:
 
 ## Donations
 
-* PayPal: [clusterrr@clusterrr.com](https://www.paypal.me/clusterm)
 * YooMoney: [41001843680639](https://yoomoney.ru/transfer/quickpay?requestId=343838343938323238305f64633138343335353537313930333165656235636336346136363334373439303432636264356532)
 * Bitcoin: [1GS4XXx1FjQaFjgHnoPPVAzw9xqfv5Spx5](https://btc.clusterrr.com/)
 * DonationAlerts: [https://www.donationalerts.com/r/clustermeerkat](https://www.donationalerts.com/r/clustermeerkat)
