@@ -233,6 +233,7 @@ class KettleConnection(SkyKettle):
                 return await self.update(tries=tries-1, force_stats=force_stats, extra_action=extra_action, commit=commit)
             else:
                 _LOGGER.warning(f"Can't update status, {type(ex).__name__}: {str(ex)}")
+                _LOGGER.debug(traceback.format_exc())
             return False
 
     def add_stat(self, value):
