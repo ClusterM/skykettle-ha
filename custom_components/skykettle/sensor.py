@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([
         SkySensor(hass, entry, SENSOR_TYPE_SUCCESS_RATE),
     ])
-    if model_code in [SkyKettle.MODELS_4, SkyKettle.MODELS_5, SkyKettle.MODELS_6, SkyKettle.MODELS_7]: # RK-G2xxS, RK-M13xS, RK-M21xS, RK-M223S but not sure
+    if model_code in [SkyKettle.MODELS_4]: # RK-G2xxS, RK-M13xS, RK-M21xS, RK-M223S but not sure
         async_add_entities([
             SkySensor(hass, entry, SENSOR_TYPE_WATER_FRESHNESS),
         ])
