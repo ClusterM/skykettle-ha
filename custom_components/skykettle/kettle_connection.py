@@ -124,7 +124,7 @@ class KettleConnection(SkyKettle):
         if not self._auth_ok:
             self._last_auth_ok = self._auth_ok = await self.auth()
             if not self._auth_ok:
-                _LOGGER.warning(f"Auth failed. You need to enable pairing mode on the kettle.")
+                _LOGGER.error(f"Auth failed. You need to enable pairing mode on the kettle.")
                 raise AuthError("Auth failed")
             _LOGGER.debug("Auth ok")
             self._sw_version = await self.get_version()
@@ -208,30 +208,13 @@ class KettleConnection(SkyKettle):
 
                 if self._last_get_stats + KettleConnection.STATS_INTERVAL < monotonic() or force_stats:
                     self._last_get_stats = monotonic()
-                    # Not sure that every kettle/firmware supports this, so ignoring exceptions
-                    try:
-                        self._stats = await self.get_stats()
-                    except Exception as ex:
-                        _LOGGER.debug(f"Can't get stats ({type(ex).__name__}): {str(ex)}")
-                        pass
-                    try:
-                        self._light_switch_boil = await self.get_light_switch(SkyKettle.LIGHT_BOIL)
-                        self._light_switch_sync = await self.get_light_switch(SkyKettle.LIGHT_SYNC)
-                    except Exception as ex:
-                        _LOGGER.debug(f"Can't get light switches ({type(ex).__name__}): {str(ex)}")
-                    try:
-                        self._lamp_auto_off_hours = await self.get_lamp_auto_off_hours()
-                    except Exception as ex:
-                        _LOGGER.debug(f"Can't get lamp auto off hours ({type(ex).__name__}): {str(ex)}")
-                    try:
-                        self._fresh_water = await self.get_fresh_water()
-                    except Exception as ex:
-                        _LOGGER.debug(f"Can't get fresh water info ({type(ex).__name__}): {str(ex)}")
-                    try:
-                        for lt in [SkyKettle.LIGHT_BOIL, SkyKettle.LIGHT_LAMP]:
-                            self._colors[lt] = await self.get_colors(lt)
-                    except Exception as ex:
-                        _LOGGER.debug(f"Can't get colors ({type(ex).__name__}): {str(ex)}")
+                    self._stats = await self.get_stats()
+                    self._light_switch_boil = await self.get_light_switch(SkyKettle.LIGHT_BOIL)
+                    self._light_switch_sync = await self.get_light_switch(SkyKettle.LIGHT_SYNC)
+                    self._lamp_auto_off_hours = await self.get_lamp_auto_off_hours()
+                    self._fresh_water = await self.get_fresh_water()
+                    for lt in [SkyKettle.LIGHT_BOIL, SkyKettle.LIGHT_LAMP]:
+                        self._colors[lt] = await self.get_colors(lt)
 
                 await self._disconnect_if_need()
                 self.add_stat(True)
@@ -249,7 +232,7 @@ class KettleConnection(SkyKettle):
                 await asyncio.sleep(KettleConnection.TRIES_INTERVAL)
                 return await self.update(tries=tries-1, force_stats=force_stats, extra_action=extra_action, commit=commit)
             else:
-                _LOGGER.debug(f"Can't update status")
+                _LOGGER.warning(f"Can't update status, {type(ex).__name__}: {str(ex)}")
             return False
 
     def add_stat(self, value):
