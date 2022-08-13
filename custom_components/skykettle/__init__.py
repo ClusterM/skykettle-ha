@@ -29,15 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DOMAIN not in hass.data: hass.data[DOMAIN] = {}
     if entry.entry_id not in hass.data: hass.data[DOMAIN][entry.entry_id] = {}
 
-    # Backward compatibility
-    if (CONF_FRIENDLY_NAME in entry.data
-        and not SkyKettle.get_model_code(entry.data[CONF_FRIENDLY_NAME]) 
-        and SkyKettle.get_model_code(entry.data[CONF_FRIENDLY_NAME] + 'S')):
-        config = dict(entry.data.items())
-        config[CONF_FRIENDLY_NAME] = config[CONF_FRIENDLY_NAME] + 'S'
-        hass.config_entries.async_update_entry(entry, data=config)
-        _LOGGER.info(f"Fixed invalid model name: {config[CONF_FRIENDLY_NAME][:-1]} -> {config[CONF_FRIENDLY_NAME]}")
-
     kettle = KettleConnection(
         mac=entry.data[CONF_MAC],
         key=entry.data[CONF_PASSWORD],
