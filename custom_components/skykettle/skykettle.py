@@ -42,6 +42,7 @@ class SkyKettle():
         "RK-G240S": MODELS_5,
         "RK-M215S": MODELS_6,
         "RK-M216S": MODELS_6,
+        "RK-M216S-E": MODELS_6,
         "RK-M223S": MODELS_6,
         "RK-M136S": MODELS_7,
         "RK-M139S": MODELS_7,
