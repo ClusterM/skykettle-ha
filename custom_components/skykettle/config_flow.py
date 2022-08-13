@@ -52,17 +52,8 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the user step."""
-        return await self.async_step_scan_message()
+        return await self.async_step_scan()
    
-    async def async_step_scan_message(self, user_input=None):
-        """Handle the scan_message step."""
-        if user_input is not None:
-            return await self.async_step_scan()
-        return self.async_show_form(
-            step_id="scan_message",
-            data_schema=vol.Schema({})
-        )
-
     async def async_step_scan(self, user_input=None):
         """Handle the scan step."""
         errors = {}
@@ -82,9 +73,6 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             scanner = bluetooth.async_get_scanner(self.hass)
-            await scanner.start()
-            await asyncio.sleep(5)
-            await scanner.stop()
             for device in scanner.discovered_devices:
                 _LOGGER.debug(f"Device found: {device.address} - {device.name}")
             devices_filtered = [device for device in scanner.discovered_devices if device.name and (device.name.startswith("RK-") or device.name.startswith("RFS-"))]
