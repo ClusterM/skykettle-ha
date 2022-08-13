@@ -1,36 +1,34 @@
 import logging
-import pexpect
 import asyncio
-from time import monotonic, sleep
-try:
-    from const import *
-except ModuleNotFoundError:
-    from .const import *
-try:
-    from skykettle import SkyKettle
-except ModuleNotFoundError:
-    from .skykettle import SkyKettle
+from time import monotonic
+from homeassistant.components import bluetooth
+from bleak import BleakScanner, BleakClient
+from .const import *
+from .skykettle import SkyKettle
 import traceback
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class KettleConnection(SkyKettle):
-    BLE_TIMEOUT = 1.5
-    MAX_TRIES = 5
+    UUID_SERVICE = "6e400001-b5a3-f393e-0a9e-50e24dcca9e"
+    UUID_TX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
+    UUID_RX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
+    BLE_RECV_TIMEOUT = 1.5
+    MAX_TRIES = 3
     TRIES_INTERVAL = 0.5
     STATS_INTERVAL = 15
     TARGET_TTL = 30
 
     def __init__(self, mac, key, persistent=True, adapter=None, hass=None, model=None):
         super().__init__(model)
-        self._child = None
+        self._device = None
+        self._client = None
         self._mac = mac
         self._key = key
         self.persistent = persistent
         self.adapter = adapter
         self.hass = hass
-        self._connected = False
         self._auth_ok = False
         self._sw_version = None
         self._iter = 0
@@ -50,111 +48,76 @@ class KettleConnection(SkyKettle):
         self._fresh_water = None
         self._colors = {}
         self._disposed = False
-
-    async def _sendline(self, data):
-        if self.hass == None:
-            self._child.sendline(data)
-        else:
-            await self.hass.async_add_executor_job(self._child.sendline, data)
-
-    async def _sendcontrol(self, data):
-        if self.hass == None:
-            self._child.sendcontrol(data)
-        else:
-            await self.hass.async_add_executor_job(self._child.sendcontrol, data)
+        self._last_data = None
 
     async def command(self, command, params=[]):
         if self._disposed:
             raise DisposedError()
-        if not self._connected or not self._child:
+        if not self._client or not self._client.is_connected:
             raise IOError("not connected")
         self._iter = (self._iter + 1) % 256
         _LOGGER.debug(f"Writing command {command:02x}, data: [{' '.join([f'{c:02x}' for c in params])}]")
-        data = f"char-write-req 0x000e 55{self._iter:02x}{''.join([f'{c:02x}' for c in [command] + list(params)])}aa"
-        #_LOGGER.debug(f"Writing {data}")
-        await self._sendline(data)
+        data = bytes([0x55, self._iter, command] + list(params) + [0xAA])
+        # _LOGGER.debug(f"Writing {data}")
+        await self._client.write_gatt_char(KettleConnection.UUID_TX, data)
+        timeout_time = monotonic() + KettleConnection.BLE_RECV_TIMEOUT
+        self._last_data = None
         while True:
-            r = await self._child.expect([
-                    r"value:([ 0-9a-f]*)\r\n.*?\[LE\]> ",
-                    r"Disconnected\r\n.*?\[LE\]> ",
-                ], async_=True)
-            if r == 1:
-                _LOGGER.debug("'Disconnected' message received")
-                raise IOError("Disconnected")
-            hex_response = self._child.match.group(1).decode().strip()
-            r = bytes.fromhex(hex_response.replace(' ',''))
-            if r[0] != 0x55 or r[-1] != 0xAA:
-                raise IOError("Invalid response magic")
-            if r[1] == self._iter: break
+            await asyncio.sleep(0.05)
+            if self._last_data:
+                r = self._last_data
+                if r[0] != 0x55 or r[-1] != 0xAA:
+                    raise IOError("Invalid response magic")
+                if r[1] == self._iter:
+                    break
+                else:
+                    self._last_data = None
+            if monotonic() >= timeout_time: raise IOError("Receive timeout")
         if r[2] != command:
             raise IOError("Invalid response command")
         clean = bytes(r[3:-1])
         _LOGGER.debug(f"Received: {' '.join([f'{c:02x}' for c in clean])}")
         return clean
 
+    def _rx_callback(self, sender, data):
+        # _LOGGER.debug(f"Received (full): {' '.join([f'{c:02x}' for c in data])}")
+        self._last_data = data
+
     async def _connect(self):
         if self._disposed:
             raise DisposedError()
-        if self._connected and self._child and self._child.isalive(): return
-        if not self._child or not self._child.isalive():
-            _LOGGER.debug("Starting \"gatttool\"...")
-            self._child = await self.hass.async_add_executor_job(pexpect.spawn, "gatttool", (['-i', self.adapter] if self.adapter else []) + ['-I', '-t', 'random', '-b', self._mac], KettleConnection.BLE_TIMEOUT)
-            await self._child.expect(r"\[LE\]> ", async_=True)
-            _LOGGER.debug("\"gatttool\" started")
-        await self._sendline(f"connect")
-        await self._child.expect(r"Attempting to connect.*?\[LE\]> ", async_=True)
-        _LOGGER.debug("Attempting to connect...")
-        await self._child.expect(r"Connection successful.*?\[LE\]> ", async_=True)
-        await self._sendline("char-write-cmd 0x000c 0100")
-        await self._child.expect(r"\[LE\]> ", async_=True)
+        if self._client and self._client.is_connected: return
+        self._device = bluetooth.async_ble_device_from_address(self.hass, self._mac)
+        self._client = BleakClient(self._device)
+        _LOGGER.debug("Connecting to the Kettle...")
+        await self._client.connect()
         _LOGGER.debug("Connected to the Kettle")
+        await self._client.start_notify(KettleConnection.UUID_RX, self._rx_callback)
+        _LOGGER.debug("Subscribed to RX")
 
     auth = lambda self: super().auth(self._key)
 
     async def _disconnect(self):
         try:
-            if self._child and self._child.isalive():
-                await self._sendline(f"disconnect")
-                await self._child.expect(r"\[LE\]> ", async_=True)
-                if self._connected:
-                    _LOGGER.debug("Disconnected")
+            if self._client and self._client.is_connected:
+                self._client.disconnect()
+                _LOGGER.debug("Disconnected")
         finally:
-            self._connected = False
             self._auth_ok = False
-
-    async def _terminate(self):
-        try:
-            if self._child and self._child.isalive():
-                try:
-                    await self._sendcontrol('d')
-                    timeout = 1
-                    while self._child.isalive():
-                        await asyncio.sleep(0.025)
-                        timeout = timeout - 0.25
-                        if timeout <= 0:
-                            if self.hass == None:
-                                self._child.terminate()
-                            else:
-                                await self.hass.async_add_executor_job(self._child.terminate)
-                            break
-                    _LOGGER.debug("Terminated")
-                except Exception as ex:
-                    _LOGGER.error(f"Can't terminate, error ({type(ex).__name__}): {str(ex)}")
-        finally:
-            self._child = None
+            self._device = None
+            self._client = None
 
     async def disconnect(self):
         try:
             await self._disconnect()
         except:
             pass
-        await self._terminate()
 
     async def _connect_if_need(self):
-        if not self._connected or not self._child or not self._child.isalive():
+        if not self._client or not self._client.is_connected:
             try:
                 await self._connect()
-                self._last_connect_ok = self._connected = True
+                self._last_connect_ok = True
             except Exception as ex:
                 self._last_connect_ok = False
                 raise ex
@@ -275,26 +238,18 @@ class KettleConnection(SkyKettle):
                 return True
 
         except Exception as ex:
-            if type(ex) == DisposedError: return
             await self.disconnect()
             if self._target_state != None and self._last_set_target + KettleConnection.TARGET_TTL < monotonic():
                 _LOGGER.warning(f"Can't set mode to {self._target_state} for {KettleConnection.TARGET_TTL} seconds, stop trying")
                 self._target_state = None
             if type(ex) == AuthError: return
             self.add_stat(False)
-            if type(ex) == pexpect.exceptions.TIMEOUT:
-                msg = "Timeout" # too many debug info
-            else:
-                msg = f"{type(ex).__name__}: {str(ex)}"
             if tries > 1 and extra_action == None:
-                _LOGGER.debug(f"{msg}, retry #{KettleConnection.MAX_TRIES - tries + 1}")
+                _LOGGER.debug(f"{type(ex).__name__}: {str(ex)}, retry #{KettleConnection.MAX_TRIES - tries + 1}")
                 await asyncio.sleep(KettleConnection.TRIES_INTERVAL)
-                return await self.update(tries=tries-1, force_stats=force_stats, commit=commit)
-            elif type(ex) != pexpect.exceptions.TIMEOUT:
-                _LOGGER.error(traceback.format_exc())
+                return await self.update(tries=tries-1, force_stats=force_stats, extra_action=extra_action, commit=commit)
             else:
-                _LOGGER.debug(f"Timeout")
-                #_LOGGER.warning(f"{type(ex).__name__}: {str(ex)}")
+                _LOGGER.debug(f"Can't update status")
             return False
 
     def add_stat(self, value):
@@ -330,25 +285,9 @@ class KettleConnection(SkyKettle):
 
     def stop(self):
         if self._disposed: return
+        self._disconnect()
         self._disposed = True
-        if self._child and self._child.isalive():
-            if self.hass == None:
-                self._child.sendcontrol('d')
-            else:
-                self.hass.async_add_executor_job(self._child.sendcontrol, 'd')
-            timeout = 1
-            while self._child.isalive():
-                sleep(0.025)
-                timeout = timeout - 0.25
-                if timeout <= 0:
-                    if self.hass == None:
-                        self._child.terminate()
-                    else:
-                        self.hass.async_add_executor_job(self._child.terminate)
-                    break
-            self._child = None
-        self._connected = False
-        _LOGGER.info("Disposed.")
+        _LOGGER.info("Stopped.")
 
     @property
     def available(self):
@@ -447,7 +386,7 @@ class KettleConnection(SkyKettle):
 
     @property
     def connected(self):
-        return self._connected
+        return True if self._client and self._client.is_connected else False
 
     @property
     def auth_ok(self):
@@ -491,7 +430,7 @@ class KettleConnection(SkyKettle):
     @property
     def colors_lamp(self):
         return self._colors.get(SkyKettle.LIGHT_LAMP, None)
-    
+
     @property
     def parental_control(self):
         if not self._status: return None
@@ -513,7 +452,7 @@ class KettleConnection(SkyKettle):
         if light_type not in self._colors: return None
         colors = self._colors[light_type]
         return colors.brightness
-    
+
     def get_temperature(self, light_type, n):
         if light_type not in self._colors: return None
         colors = self._colors[light_type]
@@ -551,7 +490,7 @@ class KettleConnection(SkyKettle):
         _LOGGER.info(f"Setting boil time to {value}")
         self._target_boil_time = value
         await self.update(commit=True)
-        
+
     async def impulse_color(self, r, g, b, brightness):
         await self.update(extra_action=super().impulse_color(r, g, b, brightness))
 
@@ -595,7 +534,7 @@ class KettleConnection(SkyKettle):
 
     async def set_temperature(self, light_type, n, temp):
         temp = int(temp)
-        if light_type not in self._colors: return        
+        if light_type not in self._colors: return
         self._last_get_stats = monotonic() # To avoid race condition
         colors = self._colors[light_type]
         temp = int(temp)

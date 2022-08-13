@@ -4,7 +4,9 @@ import re
 import secrets
 import traceback
 import sys
+import asyncio
 import subprocess
+from homeassistant.components import bluetooth
 import voluptuous as vol
 from homeassistant.const import *
 import homeassistant.helpers.config_validation as cv
@@ -50,56 +52,8 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the user step."""
-        # Check OS
-        if sys.platform != "linux":
-            return self.async_abort(reason='linux_not_found')
-        # Test binaries
-        try:
-            subprocess.Popen(["timeout"], shell=False).kill()
-        except FileNotFoundError:
-            _LOGGER.error(traceback.format_exc())
-            return self.async_abort(reason='timeout_not_found')
-        try:
-            subprocess.Popen(["gatttool"], shell=False).kill()
-        except FileNotFoundError:
-            _LOGGER.error(traceback.format_exc())
-            return self.async_abort(reason='gatttool_not_found')
-        try:
-            subprocess.Popen(["hcitool"], shell=False).kill()
-        except FileNotFoundError:
-            _LOGGER.error(traceback.format_exc())
-            return self.async_abort(reason='hcitool_not_found')
-        return await self.async_step_select_adapter()
-
-    async def async_step_select_adapter(self, user_input=None):
-        """Handle the select_adapter step."""
-        errors = {}
-        if user_input is not None:
-            spl = user_input[CONF_DEVICE].split(' ', maxsplit=1)
-            name = None
-            if spl[0] != "auto": name = spl[0]
-            self.config[CONF_DEVICE] = name
-            # Continue to scan
-            return await self.async_step_scan_message()
-
-        try:
-            adapters = await ble_get_adapters()
-            _LOGGER.debug(f"Adapters: {adapters}")
-            adapters_list = [f"{r.name} ({r.mac})" for r in adapters]
-            adapters_list = ["auto"] + adapters_list # Auto
-            schema = vol.Schema(
-            {
-                vol.Required(CONF_DEVICE): vol.In(adapters_list)
-            })
-        except Exception:
-            _LOGGER.error(traceback.format_exc())
-            return self.async_abort(reason='unknown')
-        return self.async_show_form(
-            step_id="select_adapter",
-            errors=errors,
-            data_schema=schema
-        )
-    
+        return await self.async_step_scan_message()
+   
     async def async_step_scan_message(self, user_input=None):
         """Handle the scan_message step."""
         if user_input is not None:
@@ -127,12 +81,16 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_connect()
 
         try:
-            macs = await ble_scan(self.config.get(CONF_DEVICE, None), scan_time=BLE_SCAN_TIME)
-            _LOGGER.debug(f"Scan result: {macs}")
-            macs_filtered = [mac for mac in macs if mac.name and (mac.name.startswith("RK-") or mac.name.startswith("RFS-"))]
-            if len(macs_filtered) == 0:
+            scanner = bluetooth.async_get_scanner(self.hass)
+            await scanner.start()
+            await asyncio.sleep(5)
+            await scanner.stop()
+            for device in scanner.discovered_devices:
+                _LOGGER.debug(f"Device found: {device.address} - {device.name}")
+            devices_filtered = [device for device in scanner.discovered_devices if device.name and (device.name.startswith("RK-") or device.name.startswith("RFS-"))]
+            if len(devices_filtered) == 0:
                 return self.async_abort(reason='kettle_not_found')
-            mac_list = [f"{r.mac} ({r.name})" for r in macs_filtered]
+            mac_list = [f"{r.address} ({r.name})" for r in devices_filtered]
             schema = vol.Schema(
             {
                 vol.Required(CONF_MAC): vol.In(mac_list)

@@ -5,8 +5,6 @@ FRIENDLY_NAME = "SkyKettle"
 MANUFACTORER = "Redmond"
 SUGGESTED_AREA = "kitchen"
 
-REGEX_MAC = r"^(([0-9a-fA-F]){2}[:-]?){5}[0-9a-fA-F]{2}$"
-
 CONF_PERSISTENT_CONNECTION = "persistent_connection"
 
 DEFAULT_SCAN_INTERVAL = 5

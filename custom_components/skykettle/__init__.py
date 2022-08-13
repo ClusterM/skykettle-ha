@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         config[CONF_FRIENDLY_NAME] = config[CONF_FRIENDLY_NAME] + 'S'
         hass.config_entries.async_update_entry(entry, data=config)
         _LOGGER.info(f"Fixed invalid model name: {config[CONF_FRIENDLY_NAME][:-1]} -> {config[CONF_FRIENDLY_NAME]}")
-        
+
     kettle = KettleConnection(
         mac=entry.data[CONF_MAC],
         key=entry.data[CONF_PASSWORD],

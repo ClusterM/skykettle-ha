@@ -1,6 +1,6 @@
 {
   "name": "SkyKettle",
-  "homeassistant": "2022.7.1",
+  "homeassistant": "2022.8.1",
   "render_readme": true,
   "country": ["RU"]
 }
