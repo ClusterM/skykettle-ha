@@ -6,15 +6,13 @@ import traceback
 import sys
 import asyncio
 import subprocess
-from homeassistant.components import bluetooth
 import voluptuous as vol
+from homeassistant.components import bluetooth
 from homeassistant.const import *
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from .const import *
-from .ble_scan import ble_scan
-from .ble_scan import ble_get_adapters
 from .kettle_connection import KettleConnection
 from .skykettle import SkyKettle
 
