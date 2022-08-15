@@ -22,7 +22,6 @@ class SkyKettle():
         #"RK-M173S": MODELS_2, # need more investigation
         "RK-G200":  MODELS_3,
         "RK-G200S": MODELS_4,
-        "RK-G200S-E": MODELS_4,
         "RK-G201S": MODELS_4,
         "RK-G202S": MODELS_4,
         "RK-G203S": MODELS_4,
@@ -40,7 +39,6 @@ class SkyKettle():
         "RK-G240S": MODELS_4,
         "RK-M215S": MODELS_4,
         "RK-M216S": MODELS_4,
-        "RK-M216S-E": MODELS_4,
         "RK-M223S": MODELS_4,
         "RK-M136S": MODELS_4,
         "RK-M139S": MODELS_4,
@@ -118,7 +116,11 @@ class SkyKettle():
 
     @staticmethod
     def get_model_code(model):
-        return SkyKettle.MODEL_TYPE.get(model, None)
+        if model in SkyKettle.MODEL_TYPE:
+            return SkyKettle.MODEL_TYPE[model]
+        if model.endswith("-E"):
+            return SkyKettle.MODEL_TYPE.get(model[:-2], None)
+        return None
 
     @abstractmethod
     async def command(self, command, params=[]):
