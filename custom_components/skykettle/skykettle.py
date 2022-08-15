@@ -16,9 +16,9 @@ class SkyKettle():
     MODELS_4 = "models_4"
 
     MODEL_TYPE = { # Source: https://github.com/KomX/ESPHome-Ready4Sky/blob/main/components/skykettle/__init__.py
+        #"RK-M123S": MODELS_1, # need more investigation
         #"RK-M170S": MODELS_1, # need more investigation
         "RK-M171S": MODELS_2, # not 1
-        #"RK-M123S": MODELS_1, # need more investigation
         #"RK-M173S": MODELS_2, # need more investigation
         "RK-G200":  MODELS_3,
         "RK-G200S": MODELS_4,
