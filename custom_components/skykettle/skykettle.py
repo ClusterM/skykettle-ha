@@ -22,6 +22,7 @@ class SkyKettle():
         #"RK-M173S": MODELS_2, # need more investigation
         "RK-G200":  MODELS_3,
         "RK-G200S": MODELS_4,
+        "RK-G200S-E": MODELS_4,
         "RK-G201S": MODELS_4,
         "RK-G202S": MODELS_4,
         "RK-G203S": MODELS_4,
