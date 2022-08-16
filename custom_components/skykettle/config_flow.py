@@ -70,9 +70,13 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_connect()
 
         try:
-            scanner = bluetooth.async_get_scanner(self.hass)
-            for device in scanner.discovered_devices:
-                _LOGGER.debug(f"Device found: {device.address} - {device.name}")
+            try:
+                scanner = bluetooth.async_get_scanner(self.hass)
+                for device in scanner.discovered_devices:
+                    _LOGGER.debug(f"Device found: {device.address} - {device.name}")
+            except:
+                _LOGGER.error("Bluetooth integration not working")
+                return self.async_abort(reason='no_bluetooth')
             devices_filtered = [device for device in scanner.discovered_devices if device.name and (device.name.startswith("RK-") or device.name.startswith("RFS-"))]
             if len(devices_filtered) == 0:
                 return self.async_abort(reason='kettle_not_found')
