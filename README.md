@@ -8,7 +8,6 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 ![image](https://user-images.githubusercontent.com/4236181/151022885-1a93c4d5-b5fe-40f2-8d1f-ddb458ea2c09.png)
 
 ## Supported models
-
 * RK-G200
 * RK-G200S
 * RK-G201S
@@ -27,7 +26,6 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 * RK-M171S
 * RK-M215S
 * RK-M216S
-* RK-M216S-E
 * RK-M223S
 * RK-M136S
 * RFS-KKL002
@@ -35,7 +33,7 @@ This integration allows to control smart kettles from **Redmond SkyKettle** seri
 * RFS-KKL004
 * ???
 
-If your kettle model is not listed, please write an [issue](https://github.com/ClusterM/skykettle-ha/issues) and I'll try to add support for it with your help.
+If your kettle model is not listed, please write an [issue](https://github.com/ClusterM/skykettle-ha/issues) and I'll try to add support for it with your help. Models RK-M123S, RK-M170S and RK-M173S are especially wanted.
 
 ## Features
 * Allows to set target temperature.
@@ -47,18 +45,66 @@ If your kettle model is not listed, please write an [issue](https://github.com/C
 * Persistent connection and fast reconnect.
 
 ## Requirements
-
 * Bluetooth adapter with BLE support.
 * Home Assistant [Bluetooth integration](https://www.home-assistant.io/integrations/bluetooth/) (comes with Home Assistant v2022.8.1+)
 
 ## How to use
-
-* Install it via [HACS](https://hacs.xyz/) - search for **SkyKettle** or just copy [skykettle](https://github.com/ClusterM/skykettle_ha/tree/master/custom_components/skykettle) directory to your `custom_components` directory.
+* Make sure that you are using Home Assistant version 2022.8.1 or greater.
+* Make sure that [Bluetooth integration](https://www.home-assistant.io/integrations/bluetooth/) is installed, enabled and working.
+* Install **SkyKettle** integration via [HACS](https://hacs.xyz/) - search for **SkyKettle** or just copy [skykettle](https://github.com/ClusterM/skykettle_ha/tree/master/custom_components/skykettle) directory to your `custom_components` directory.
 * Add **SkyKettle** integration just like any other integration (restart Home Assistant and press Shift+F5 if it's not listed).
 * Make sure that the Kettle is on the stand and it's plugged into the outlet.
 * Select MAC address of your kettle from the list.
 * Tune rest of the settings if you want.
 * Enjoy.
+
+## Entities
+The default entity names are listed below. Note that some entities can be missed on your kettle model.
+
+### water_heater.*kettle_model*
+This is main entity to control water boiling and heating. There are five operation modes:
+* Off - the kettle is off, not heating at all.
+* Heat - just heat water to the desired temperature and keep this temperature. Without boiling. Useful when water already boiled and you need just to warm it up.
+* Boil - boil water and turn off (switch to "Off" mode).
+* Boil+heat - boil water, wait until temperature drops to the desired temperature and keep this temperature.
+* Lamp - use kettle as night light, color changes between the selected ones (see below).
+* Light - use kettle as night light but keep the only one selected color (see below).
+
+### light.*kettle_model*_light (Light)
+This entity allows to control the "Light" mode. You can select brightness and color when this mode is active. The "Light" mode will be enabled automatically when this virtual light is on.
+
+### switch.*kettle_model*
+Just virtual switch to control the kettle. Turn it on to switch the kettle to "Boil" mode and turn it off for "Off" mode.
+
+### sensor.*kettle_model*_water_freshness
+Virtual sensor to check how long the water has been in the kettle. Actually, it's just kettle uptime.
+
+### number.*kettle_model*_boil_time (Boil time)
+This is configuration entity to select boil time from -5 to +5 just like in the official app.
+
+### switch.*kettle_model*_enable_boil_light (Enable boil light)
+This is configuration entity to enable or disable the boil light. This light in on when "Heat", "Boil" or "Boil+Heat" mode is active. Color depends on the current water temperature (see below).
+
+### switch.*kettle_model*_enable_sound (Enable sound).
+This is configuration entity to enable or disable kettle beeping sounds.
+
+### switch.*kettle_model*_enable_sync_light (Enable sync light)
+This is configuration entity to enable or disable the idle light. This light in on when "Off" mode is active. Color depends on the current water temperature (see below).
+
+### light.*kettle_model*_lamp_1_color (Lamp color #1), light.*kettle_model*_lamp_2_color (Lamp color #2) and light.*kettle_model*_lamp_3_color (Lamp color #3)
+These are three configuration entities to select colors in the "Lamp" mode. The color will change smoothly from #1 to #2, from #2 to #3 and back.
+
+### number.*kettle_model*_lamp_color_change_interval (Lamp color change interval)
+This is configuration entity to select color change interval in the "Lamp" mode. In seconds. Minimum is 30 seconds.
+
+### number.*kettle_model*_lamp_auto_off_time (Lamp auto off time)
+This is configuration entity to select lamp auto off time in hours. Lamp will be turned off after this time passed.
+
+### number.*kettle_model*_temperature_1 (Temperature #1), light.*kettle_model*_temperature_1_color (Temperature #1 color), number.*kettle_model*_temperature_2 (Temperature #2), light.*kettle_model*_temperature_2_color  (Temperature #2 color) and number.*kettle_model*_temperature_3 (Temperature #3), light.*kettle_model*_temperature_3_color (Temperature #3 color)
+These are six configuration entities to select colors for the "boil light" and "sync light". You can select three colors and temperature for each color. The color will change smoothly.
+
+### sensor.skykettle_rk_g211s_success_rate (Success rate)
+Diagnostic entity, shows percent of successfull connections and polls.
 
 ## Scripts
 ### To boil and turn off after boiling
@@ -143,7 +189,6 @@ sequence:
 ```
 
 ## Hints
-
 You can use the [card_mod](https://github.com/thomasloven/lovelace-card-mod) integration to make the color of the card icon depend on the temperature of the kettle.
 
 Example:
@@ -213,7 +258,6 @@ cards:
 ![image](https://user-images.githubusercontent.com/4236181/153446401-45c2f09e-2637-4fd1-8dec-0c365a3babb5.png)
 
 ## Donations
-
 * YooMoney: [41001843680639](https://yoomoney.ru/transfer/quickpay?requestId=343838343938323238305f64633138343335353537313930333165656235636336346136363334373439303432636264356532)
 * Bitcoin: [1GS4XXx1FjQaFjgHnoPPVAzw9xqfv5Spx5](https://btc.clusterrr.com/)
 * DonationAlerts: [https://www.donationalerts.com/r/clustermeerkat](https://www.donationalerts.com/r/clustermeerkat)
