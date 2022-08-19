@@ -14,6 +14,7 @@ class KettleConnection(SkyKettle):
     UUID_SERVICE = "6e400001-b5a3-f393e-0a9e-50e24dcca9e"
     UUID_TX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
     UUID_RX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
+    CONNECTION_TIMEOUT = 10
     BLE_RECV_TIMEOUT = 1.5
     MAX_TRIES = 3
     TRIES_INTERVAL = 0.5
@@ -90,7 +91,11 @@ class KettleConnection(SkyKettle):
         self._device = bluetooth.async_ble_device_from_address(self.hass, self._mac)
         self._client = BleakClient(self._device)
         _LOGGER.debug("Connecting to the Kettle...")
-        await self._client.connect()
+        await asyncio.wait_for(
+            # Bluez connection timeout is not working actually
+            self._client.connect(timeout=KettleConnection.CONNECTION_TIMEOUT),
+            timeout=KettleConnection.CONNECTION_TIMEOUT
+        )
         _LOGGER.debug("Connected to the Kettle")
         await self._client.start_notify(KettleConnection.UUID_RX, self._rx_callback)
         _LOGGER.debug("Subscribed to RX")
@@ -99,9 +104,10 @@ class KettleConnection(SkyKettle):
 
     async def _disconnect(self):
         try:
-            if self._client and self._client.is_connected:
+            if self._client:
+                was_connected = self._client.is_connected
                 self._client.disconnect()
-                _LOGGER.debug("Disconnected")
+                if was_connected: _LOGGER.debug("Disconnected")
         finally:
             self._auth_ok = False
             self._device = None
@@ -114,11 +120,15 @@ class KettleConnection(SkyKettle):
             pass
 
     async def _connect_if_need(self):
+        if self._client and not self._client.is_connected:
+            _LOGGER.debug("Connection lost")
+            await self.disconnect()
         if not self._client or not self._client.is_connected:
             try:
                 await self._connect()
                 self._last_connect_ok = True
             except Exception as ex:
+                await self.disconnect()
                 self._last_connect_ok = False
                 raise ex
         if not self._auth_ok:
