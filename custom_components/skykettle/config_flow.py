@@ -20,8 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Wake cv.matches_regexon LAN integration."""
-
     VERSION = 1
 
     @staticmethod
@@ -85,12 +83,6 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_MAC): vol.In(mac_list)
             })
-        except PermissionError:
-            _LOGGER.error(traceback.format_exc())
-            return self.async_abort(reason='permission_error')
-        except FileNotFoundError:
-            _LOGGER.error(traceback.format_exc())
-            return self.async_abort(reason='hcitool_not_found')
         except Exception:
             _LOGGER.error(traceback.format_exc())
             return self.async_abort(reason='unknown')
