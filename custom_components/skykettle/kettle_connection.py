@@ -106,7 +106,7 @@ class KettleConnection(SkyKettle):
         try:
             if self._client:
                 was_connected = self._client.is_connected
-                self._client.disconnect()
+                await self._client.disconnect()
                 if was_connected: _LOGGER.debug("Disconnected")
         finally:
             self._auth_ok = False
