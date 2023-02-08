@@ -1,9 +1,15 @@
 {
     "state": {
         "skykettle": {
-            "off": "Off",
             "Boil": "Boiling",
-            "Boil+Heat": "Boiling+Heating",
+            "Boil+Heat": "Boiling + Heating",
+            "Heat": "Heating",
+            "Lamp": "Lamp",
+            "Light": "Light"
+        },
+        "_": {
+            "Boil": "Boiling",
+            "Boil+Heat": "Boiling + Heating",
             "Heat": "Heating",
             "Lamp": "Lamp",
             "Light": "Light"
