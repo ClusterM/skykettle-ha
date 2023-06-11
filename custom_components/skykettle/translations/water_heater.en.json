@@ -3,11 +3,11 @@
         "_": {
             "state": {
                 "off": "Off",
-                "Boil": "Boiling",
-                "Boil+Heat": "Boiling + Heating",
-                "Heat": "Heating",
-                "Lamp": "Lamp",
-                "Light": "Light"
+                "boil": "Boiling",
+                "boil+heat": "Boiling + Heating",
+                "heat": "Heating",
+                "lamp": "Lamp",
+                "light": "Light"
             }
         }
     }
