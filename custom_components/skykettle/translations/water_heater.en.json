@@ -1,12 +1,14 @@
 {
-    "state": {
-        "skykettle": {
-            "off": "Off",
-            "Boil": "Boiling",
-            "Boil+Heat": "Boiling+Heating",
-            "Heat": "Heating",
-            "Lamp": "Lamp",
-            "Light": "Light"
+    "entity_component": {
+        "_": {
+            "state": {
+                "off": "Off",
+                "Boil": "Boiling",
+                "Boil+Heat": "Boiling + Heating",
+                "Heat": "Heating",
+                "Lamp": "Lamp",
+                "Light": "Light"
+            }
         }
     }
 }
