@@ -1,14 +1,12 @@
 {
-    "entity_component": {
+    "state": {
         "_": {
-            "state": {
-                "off": "Off",
-                "Boil": "Boiling",
-                "Boil+Heat": "Boiling + Heating",
-                "Heat": "Heating",
-                "Lamp": "Lamp",
-                "Light": "Light"
-            }
+            "off": "Off",
+            "Boil": "Boiling",
+            "Boil+Heat": "Boiling + Heating",
+            "Heat": "Heating",
+            "Lamp": "Lamp",
+            "Light": "Light"
         }
     }
 }
