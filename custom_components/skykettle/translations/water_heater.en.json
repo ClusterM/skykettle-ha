@@ -4,7 +4,7 @@
             "state": {
                 "off": "Off",
                 "Boil": "Boiling",
-                "Hoil+Heat": "Boiling + Heating",
+                "Boil+Heat": "Boiling + Heating",
                 "Heat": "Heating",
                 "Lamp": "Lamp",
                 "Light": "Light"
