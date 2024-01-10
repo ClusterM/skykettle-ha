@@ -60,9 +60,9 @@ class KettleConnection(SkyKettle):
         _LOGGER.debug(f"Writing command {command:02x}, data: [{' '.join([f'{c:02x}' for c in params])}]")
         data = bytes([0x55, self._iter, command] + list(params) + [0xAA])
         # _LOGGER.debug(f"Writing {data}")
+        self._last_data = None
         await self._client.write_gatt_char(KettleConnection.UUID_TX, data)
         timeout_time = monotonic() + KettleConnection.BLE_RECV_TIMEOUT
-        self._last_data = None
         while True:
             await asyncio.sleep(0.05)
             if self._last_data:
