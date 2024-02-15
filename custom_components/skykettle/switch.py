@@ -2,12 +2,13 @@
 import logging
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.const import CONF_FRIENDLY_NAME
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              async_dispatcher_send)
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.dispatcher import async_dispatcher_send, async_dispatcher_connect
-from homeassistant.const import *
 
-from .skykettle import SkyKettle
 from .const import *
+from .skykettle import SkyKettle
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,17 +1,18 @@
 """Config flow for Sky Kettle integration."""
+
 import logging
-import re
 import secrets
 import traceback
-import sys
-import asyncio
-import subprocess
+
 import voluptuous as vol
-from homeassistant.components import bluetooth
-from homeassistant.const import *
-from homeassistant import config_entries
-from homeassistant.core import callback
+
 import homeassistant.helpers.config_validation as cv
+from homeassistant import config_entries
+from homeassistant.components import bluetooth
+from homeassistant.const import (CONF_DEVICE, CONF_FRIENDLY_NAME, CONF_MAC,
+                                 CONF_PASSWORD, CONF_SCAN_INTERVAL)
+from homeassistant.core import callback
+
 from .const import *
 from .kettle_connection import KettleConnection
 from .skykettle import SkyKettle
