@@ -1,15 +1,16 @@
 """SkyKettle."""
 import logging
-from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterEntity,
-)
-from homeassistant.helpers.dispatcher import async_dispatcher_send, async_dispatcher_connect
-from homeassistant.const import *
 
-from .skykettle import SkyKettle
+from homeassistant.components.water_heater import (WaterHeaterEntity,
+                                                   WaterHeaterEntityFeature)
+from homeassistant.const import (ATTR_SW_VERSION, ATTR_TEMPERATURE,
+                                 CONF_FRIENDLY_NAME, CONF_SCAN_INTERVAL,
+                                 STATE_OFF, UnitOfTemperature)
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              async_dispatcher_send)
+
 from .const import *
+from .skykettle import SkyKettle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,11 +78,11 @@ class SkyWaterHeater(WaterHeaterEntity):
 
     @property
     def supported_features(self):
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        return WaterHeaterEntityFeature.TARGET_TEMPERATURE | WaterHeaterEntityFeature.OPERATION_MODE
 
     @property
     def temperature_unit(self):
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def min_temp(self):

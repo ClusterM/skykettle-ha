@@ -1,18 +1,15 @@
 """SkyKettle."""
 import logging
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
-    COLOR_MODE_RGB,
-    LightEntity,
-)
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
+                                            ColorMode, LightEntity, LightEntityFeature)
+from homeassistant.const import CONF_FRIENDLY_NAME, STATE_OFF
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              async_dispatcher_send)
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.dispatcher import async_dispatcher_send, async_dispatcher_connect
-from homeassistant.const import *
 
-from .skykettle import SkyKettle
 from .const import *
+from .skykettle import SkyKettle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,17 +152,17 @@ class KettleLight(LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return 0
+        return LightEntityFeature(0)
 
     @property
     def color_mode(self):
         """Return the color mode of the light."""
-        return COLOR_MODE_RGB
+        return ColorMode.RGB
 
     @property
     def supported_color_modes(self):
         """Flag supported color modes."""
-        return {COLOR_MODE_RGB}
+        return {ColorMode.RGB}
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""

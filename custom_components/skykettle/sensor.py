@@ -1,13 +1,15 @@
 """SkyKettle."""
 import logging
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass, SensorDeviceClass
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
+                                             SensorStateClass)
+from homeassistant.const import (CONF_FRIENDLY_NAME, PERCENTAGE, UnitOfEnergy,
+                                 UnitOfTime)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.const import *
+from homeassistant.helpers.entity import EntityCategory
 
-from .skykettle import SkyKettle
 from .const import *
+from .skykettle import SkyKettle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,11 +156,11 @@ class SkySensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         if self.sensor_type == SENSOR_TYPE_ENERGY:
-            return ENERGY_WATT_HOUR
+            return UnitOfEnergy.WATT_HOUR
         if self.sensor_type == SENSOR_TYPE_ONTIME:
-            return TIME_SECONDS
+            return UnitOfTime.SECONDS
         if self.sensor_type == SENSOR_TYPE_WATER_FRESHNESS:
-            return TIME_HOURS
+            return UnitOfTime.HOURS
         if self.sensor_type == SENSOR_TYPE_SUCCESS_RATE:
             return PERCENTAGE
         return None

@@ -1,15 +1,18 @@
 """Support for SkyKettle."""
 import logging
-from .const import *
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import *
+from datetime import timedelta
+
 import homeassistant.helpers.event as ev
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (ATTR_SW_VERSION, CONF_DEVICE,
+                                 CONF_FRIENDLY_NAME, CONF_MAC, CONF_PASSWORD,
+                                 CONF_SCAN_INTERVAL, Platform)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
-from datetime import timedelta
+
+from .const import *
 from .kettle_connection import KettleConnection
-from .skykettle import SkyKettle
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,13 +1,15 @@
 """SkyKettle."""
 import logging
 
-from homeassistant.components.number import NumberMode, NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.const import (CONF_FRIENDLY_NAME, UnitOfTemperature,
+                                 UnitOfTime)
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              async_dispatcher_send)
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.dispatcher import async_dispatcher_send, async_dispatcher_connect
-from homeassistant.const import *
 
-from .skykettle import SkyKettle
 from .const import *
+from .skykettle import SkyKettle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,15 +144,15 @@ class SkyNumber(NumberEntity):
         if self.number_type == NUMBER_TYPE_BOIL_TIME:
             return None
         if self.number_type == NUMBER_TEMPERATURE_LOW:
-            return "°C"
+            return UnitOfTemperature.CELSIUS
         if self.number_type == NUMBER_TEMPERATURE_MID:
-            return "°C"
+            return UnitOfTemperature.CELSIUS
         if self.number_type == NUMBER_TEMPERATURE_HIGH:
-            return "°C"
+            return UnitOfTemperature.CELSIUS
         if self.number_type == NUMBER_COLOR_INTERVAL:
             return "secs"
         if self.number_type == NUMBER_LAMP_AUTO_OFF_HOURS:
-            return "h"
+            return UnitOfTime.HOURS
 
     @property
     def native_value(self):

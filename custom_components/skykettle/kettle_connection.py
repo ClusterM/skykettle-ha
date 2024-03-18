@@ -1,11 +1,14 @@
-import logging
 import asyncio
+import logging
+import traceback
 from time import monotonic
+
+from bleak import BleakClient
+
 from homeassistant.components import bluetooth
-from bleak import BleakScanner, BleakClient
+
 from .const import *
 from .skykettle import SkyKettle
-import traceback
 
 _LOGGER = logging.getLogger(__name__)
 
