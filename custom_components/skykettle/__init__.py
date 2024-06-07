@@ -44,7 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def poll(now, **kwargs) -> None:
         await kettle.update()
-        await hass.async_add_executor_job(async_dispatcher_send, hass, DISPATCHER_UPDATE)
         if hass.data[DOMAIN][DATA_WORKING]:
             schedule_poll(timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]))
         else:
