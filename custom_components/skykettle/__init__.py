@@ -8,7 +8,7 @@ from homeassistant.const import (ATTR_SW_VERSION, CONF_DEVICE,
                                  CONF_FRIENDLY_NAME, CONF_MAC, CONF_PASSWORD,
                                  CONF_SCAN_INTERVAL, Platform)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import *
@@ -44,6 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def poll(now, **kwargs) -> None:
         await kettle.update()
+        await hass.async_add_executor_job(dispatcher_send, hass, DISPATCHER_UPDATE)
         if hass.data[DOMAIN][DATA_WORKING]:
             schedule_poll(timedelta(seconds=entry.data[CONF_SCAN_INTERVAL]))
         else:
