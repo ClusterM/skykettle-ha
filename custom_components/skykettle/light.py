@@ -5,7 +5,7 @@ from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
                                             ColorMode, LightEntity, LightEntityFeature)
 from homeassistant.const import CONF_FRIENDLY_NAME, STATE_OFF
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
-                                              async_dispatcher_send)
+                                              dispatcher_send)
 from homeassistant.helpers.entity import EntityCategory
 
 from .const import *
@@ -54,7 +54,7 @@ class KettleLight(LightEntity):
             if (self.kettle.target_mode == SkyKettle.MODE_GAME and
                 self.kettle.current_mode == SkyKettle.MODE_GAME):
                 if not self.on:
-                    self.hass.async_create_task(self.async_turn_on())
+                    self.hass.create_task(self.async_turn_on())
             else:
                 self.on = False
 
@@ -183,7 +183,7 @@ class KettleLight(LightEntity):
                 await self.kettle.set_color(self.light_type, self.n, kwargs[ATTR_RGB_COLOR])
             if ATTR_BRIGHTNESS in kwargs:
                 await self.kettle.set_brightness(self.light_type, kwargs[ATTR_BRIGHTNESS])
-        self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
+        self.hass.async_add_executor_job(dispatcher_send, self.hass, DISPATCHER_UPDATE)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
@@ -191,4 +191,4 @@ class KettleLight(LightEntity):
         if self.light_type == LIGHT_GAME:
             await self.kettle.set_target_mode(STATE_OFF)
             self.on = False
-        self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
+        self.hass.async_add_executor_job(dispatcher_send, self.hass, DISPATCHER_UPDATE)
