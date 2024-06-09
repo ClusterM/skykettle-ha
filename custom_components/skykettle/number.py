@@ -4,8 +4,8 @@ import logging
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import (CONF_FRIENDLY_NAME, UnitOfTemperature,
                                  UnitOfTime)
-from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
-                                              async_dispatcher_send)
+from homeassistant.helpers.dispatcher import (dispatcher_connect,
+                                              dispatcher_send)
 from homeassistant.helpers.entity import EntityCategory
 
 from .const import *
@@ -47,7 +47,7 @@ class SkyNumber(NumberEntity):
 
     async def async_added_to_hass(self):
         self.update()
-        self.async_on_remove(async_dispatcher_connect(self.hass, DISPATCHER_UPDATE, self.update))
+        self.async_on_remove(dispatcher_connect(self.hass, DISPATCHER_UPDATE, self.update))
 
     def update(self):
         self.schedule_update_ha_state()
@@ -242,4 +242,4 @@ class SkyNumber(NumberEntity):
             await self.kettle.set_lamp_color_interval(value)
         if self.number_type == NUMBER_LAMP_AUTO_OFF_HOURS:
             await self.kettle.set_lamp_auto_off_hours(value)
-        self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
+        self.hass.async_add_executor_job(dispatcher_send, self.hass, DISPATCHER_UPDATE)

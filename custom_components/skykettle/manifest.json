@@ -3,7 +3,7 @@
   "name": "SkyKettle",
   "codeowners": ["@clusterm"],
   "config_flow": true,
-  "dependencies": ["bluetooth_adapters"],
+  "dependencies": ["bluetooth"],
   "documentation": "https://github.com/ClusterM/skykettle-ha/blob/master/README.md",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/ClusterM/skykettle-ha/issues",
