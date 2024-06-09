@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
-                                              async_dispatcher_send)
+                                              dispatcher_send)
 from homeassistant.helpers.entity import EntityCategory
 
 from .const import *
@@ -140,7 +140,7 @@ class SkySwitch(SwitchEntity):
             await self.kettle.set_light_switch(SkyKettle.LIGHT_SYNC, True)
         if self.switch_type == SWITCH_LIGHT_BOIL:
             await self.kettle.set_light_switch(SkyKettle.LIGHT_BOIL, True)
-        self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
+        self.hass.async_add_executor_job(dispatcher_send, self.hass, DISPATCHER_UPDATE)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
@@ -152,4 +152,4 @@ class SkySwitch(SwitchEntity):
             await self.kettle.set_light_switch(SkyKettle.LIGHT_SYNC, False)
         if self.switch_type == SWITCH_LIGHT_BOIL:
             await self.kettle.set_light_switch(SkyKettle.LIGHT_BOIL, False)
-        self.hass.async_add_executor_job(async_dispatcher_send, self.hass, DISPATCHER_UPDATE)
+        self.hass.async_add_executor_job(dispatcher_send, self.hass, DISPATCHER_UPDATE)
