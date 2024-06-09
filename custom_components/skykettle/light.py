@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
                                             ColorMode, LightEntity, LightEntityFeature)
 from homeassistant.const import CONF_FRIENDLY_NAME, STATE_OFF
-from homeassistant.helpers.dispatcher import (dispatcher_connect,
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               dispatcher_send)
 from homeassistant.helpers.entity import EntityCategory
 
@@ -46,7 +46,7 @@ class KettleLight(LightEntity):
 
     async def async_added_to_hass(self):
         self.update()
-        self.async_on_remove(dispatcher_connect(self.hass, DISPATCHER_UPDATE, self.update))
+        self.async_on_remove(async_dispatcher_connect(self.hass, DISPATCHER_UPDATE, self.update))
 
     def update(self):
         self.schedule_update_ha_state()
