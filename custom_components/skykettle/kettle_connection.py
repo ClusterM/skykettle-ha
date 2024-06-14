@@ -336,11 +336,13 @@ class KettleConnection(SkyKettle):
     def target_mode_str(self):
         return self.get_mode_name(self.target_mode)
 
-    async def set_target_temp(self, target_temp):
+    async def set_target_temp(self, target_temp, operation_mode = None):
         """Set new temperature."""
         if target_temp == self.target_temp: return # already set
         _LOGGER.info(f"Setting target temperature to {target_temp}")
         target_mode = self.target_mode
+        vs = [k for k, v in SkyKettle.MODE_NAMES.items() if v == operation_mode]
+        if len(vs) > 0: target_mode = vs[0]
         # Some checks for mode
         if target_temp < SkyKettle.MIN_TEMP:
             # Just turn off
