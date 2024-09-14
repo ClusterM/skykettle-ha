@@ -2,7 +2,8 @@
 import logging
 
 from homeassistant.components.water_heater import (WaterHeaterEntity,
-                                                   WaterHeaterEntityFeature)
+                                                   WaterHeaterEntityFeature,
+                                                   ATTR_OPERATION_MODE)
 from homeassistant.const import (ATTR_SW_VERSION, ATTR_TEMPERATURE,
                                  CONF_FRIENDLY_NAME, CONF_SCAN_INTERVAL,
                                  STATE_OFF, UnitOfTemperature)
@@ -174,7 +175,8 @@ class SkyWaterHeater(WaterHeaterEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self.kettle.set_target_temp(target_temperature)
+        operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        await self.kettle.set_target_temp(target_temperature, operation_mode)
         self.hass.async_add_executor_job(dispatcher_send, self.hass, DISPATCHER_UPDATE)
 
     async def async_set_operation_mode(self, operation_mode):
