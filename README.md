@@ -258,6 +258,7 @@ cards:
 ![image](https://user-images.githubusercontent.com/4236181/153446401-45c2f09e-2637-4fd1-8dec-0c365a3babb5.png)
 
 ## Donations
-* YooMoney: [41001843680639](https://yoomoney.ru/transfer/quickpay?requestId=343838343938323238305f64633138343335353537313930333165656235636336346136363334373439303432636264356532)
-* Bitcoin: [1GS4XXx1FjQaFjgHnoPPVAzw9xqfv5Spx5](https://btc.clusterrr.com/)
-* DonationAlerts: [https://www.donationalerts.com/r/clustermeerkat](https://www.donationalerts.com/r/clustermeerkat)
+* [Buy Me A Coffee](https://www.buymeacoffee.com/cluster)
+* [Donation Alerts](https://www.donationalerts.com/r/clustermeerkat)
+* [Boosty](https://boosty.to/cluster)
+
