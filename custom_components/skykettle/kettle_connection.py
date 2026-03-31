@@ -308,10 +308,11 @@ class KettleConnection(SkyKettle):
     async def cancel_target(self):
         self._target_state = None
 
-    def stop(self):
+    async def stop(self):
         if self._disposed: return
-        self._disconnect()
         self._disposed = True
+        self._target_state = None
+        await self.disconnect()
         _LOGGER.info("Stopped.")
 
     @property

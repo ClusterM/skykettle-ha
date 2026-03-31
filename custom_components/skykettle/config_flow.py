@@ -112,7 +112,7 @@ class SkyKettleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             
             connect_ok = kettle._last_connect_ok
             auth_ok = kettle._last_auth_ok
-            kettle.stop()
+            await kettle.stop()
         
             if not connect_ok:
                 errors["base"] = "cant_connect"
