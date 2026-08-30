@@ -168,6 +168,14 @@ class KettleLight(LightEntity):
         """Turn the light on."""
         _LOGGER.debug(f"Turn on ({self.light_type}): {kwargs}")
         if self.light_type == LIGHT_GAME:
+            # Don't switch the kettle into the decorative Game light mode
+            # while a heating cycle is active - that would interrupt boiling.
+            if self.kettle.target_mode in (SkyKettle.MODE_BOIL,
+                                            SkyKettle.MODE_HEAT,
+                                            SkyKettle.MODE_BOIL_HEAT):
+                _LOGGER.debug("Skip Game light: a heating cycle is active")
+                self.hass.async_add_executor_job(dispatcher_send, self.hass, DISPATCHER_UPDATE)
+                return
             r, g, b, brightness = self.current
             if ATTR_RGB_COLOR in kwargs:
                 r, g, b = kwargs[ATTR_RGB_COLOR]
@@ -189,6 +197,11 @@ class KettleLight(LightEntity):
         """Turn the light off."""
         _LOGGER.debug(f"Turn off ({self.light_type}): {kwargs}")
         if self.light_type == LIGHT_GAME:
-            await self.kettle.set_target_mode(STATE_OFF)
+            # Only send protocol Off if the kettle is actually in the Game
+            # light mode managed by this entity. Otherwise turning the light
+            # off would switch off the whole kettle and stop boiling/heating
+            # (see https://github.com/ClusterM/skykettle-ha/issues/95).
+            if self.kettle.target_mode == SkyKettle.MODE_GAME:
+                await self.kettle.set_target_mode(STATE_OFF)
             self.on = False
         self.hass.async_add_executor_job(dispatcher_send, self.hass, DISPATCHER_UPDATE)
